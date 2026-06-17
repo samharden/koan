@@ -1,0 +1,12 @@
+{
+  "//": "Copy to .mcp.json and replace the absolute path. Claude Code reads .mcp.json from the project root. Build the server first: npm run build:mcp. No API key needed — the server is pure storage + retrieval; Claude does the structuring.",
+  "mcpServers": {
+    "knowledge-capture": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/KG/apps/mcp/dist/index.js"],
+      "env": {
+        "//KG_HOME": "optional — defaults to ~/.knowledge-capture; set to share a non-default store with the web app"
+      }
+    }
+  }
+}

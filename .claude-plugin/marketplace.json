@@ -1,0 +1,14 @@
+{
+  "name": "knowledge-capture-local",
+  "owner": {
+    "name": "Sam Harden",
+    "email": "samharden@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "knowledge-capture",
+      "source": "./plugin",
+      "description": "Skills for capturing, recalling, and reviewing firm know-how with the knowledge-capture MCP server."
+    }
+  ]
+}

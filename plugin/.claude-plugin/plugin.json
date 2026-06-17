@@ -1,0 +1,7 @@
+{
+  "name": "knowledge-capture",
+  "version": "0.1.0",
+  "description": "Skills for capturing, recalling, and reviewing firm know-how. Pairs with the knowledge-capture MCP server (added separately via `claude mcp add`), which provides the tools these skills drive.",
+  "author": { "name": "Knowledge Capture contributors" },
+  "license": "MIT"
+}

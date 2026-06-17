@@ -1,0 +1,209 @@
+# Knowledge Capture
+
+Capture the "how do we do X" know-how that lives in people's heads, turn it into
+reusable playbooks, and recall it later — from a web app **or** from inside
+Claude. Local-first: your knowledge lives in plain markdown files on your own
+machine.
+
+Built for law firms (confidentiality and ethical-wall aware), but the core is
+domain-agnostic.
+
+> Status: working prototype. Capture, structure, local semantic search, document
+> ingest, and the review/promote flow all work and are tested — in the web app and
+> as an interactive MCP connector. Roadmap items (auth, OCR, duplicate detection)
+> are called out below.
+
+## How it fits together
+
+One shared core, two thin frontends, one store:
+
+```
+              ┌─────────────────────────────┐
+   Web app ──▶│        @kg/core             │◀── MCP server (Claude plugin)
+  (talk +     │  capture · store · embed    │   (search / capture / ingest
+   upload)    │  search  · ingest           │    from inside Claude)
+              └──────────────┬──────────────┘
+                             ▼
+                  $KG_HOME  (markdown + local embedding index)
+                  ~/.knowledge-capture by default
+```
+
+Because both frontends point at the same `$KG_HOME`, what you capture in the web
+app is searchable in Claude, and vice-versa.
+
+## Repo layout
+
+```
+packages/core/   @kg/core — store, local embeddings, retrieval, capture, ingest
+apps/mcp/        local stdio MCP server (the Claude plugin)
+nextjs/          web app: chat capture + document upload
+plugin/          Claude Code plugin manifest + skills
+reference-architecture.md   the design this implements
+```
+
+## The knowledge lifecycle
+
+1. **Capture** — talk to the interviewer (web) or call `capture_knowledge` (Claude).
+2. **Structure** — a structure pass turns the conversation/notes/document into a
+   `Unit` and writes a **draft** to `$KG_HOME/inbox/`.
+3. **Serve** — `search` does semantic retrieval (local embeddings) with a lexical
+   fallback, over both captured units and ingested documents.
+4. **Maintain** — every unit is written `status: draft` and is never treated as
+   authoritative until a human reviews it and **promotes** it to `$KG_HOME/units/`,
+   stamping `verified_by`, `verified_on`, and a `review_by` date. Use the web
+   **Review queue** (`/review`) or the `review_queue` / `promote_unit` /
+   `reject_draft` MCP tools. Promotion drops the `draft-` id prefix and flips
+   `status` to `active`; drafts can also be edited or discarded.
+
+Confidentiality is a first-class field (`internal | walled | client`); the
+structure pass flags `walled` when a capture references a specific client matter.
+
+## Installation
+
+**Prerequisites:** Node 18+ (20+ recommended) and npm.
+
+```bash
+git clone https://github.com/<your-username>/knowledge-capture.git
+cd knowledge-capture
+npm install        # installs all workspaces
+npm run build      # builds @kg/core + the MCP server (incl. the interactive UI card)
+```
+
+That's the whole setup. Now run it as a Claude connector, as a web app, or both —
+they share one store.
+
+### Add to Claude (Cowork, Desktop, or CLI)
+
+The connector is pure local storage + retrieval, so it needs **no API key**.
+
+**Easiest — install the plugin (skills + connector in one).** From the repo root:
+
+```bash
+npm run setup              # builds the server + writes plugin/.mcp.json for your machine
+claude plugins add ./plugin
+```
+
+Then **restart Cowork / Claude Desktop** (or `/reload-plugins` in the CLI). This
+installs the three workflow **skills** and the **knowledge-capture connector**
+together. `npm run setup` points the connector at the server built in this repo so
+it runs in place and keeps **local semantic search** — a copied-into-cache bundle
+can't carry the native embedding binaries, so it would silently drop to lexical.
+The generated `plugin/.mcp.json` is machine-specific (gitignored); re-run
+`npm run setup` after moving the repo. See [plugin/README.md](plugin/README.md).
+
+**Manual — add the connector yourself** (skip the plugin, or just want the tools):
+
+```bash
+# Claude Code (CLI)
+claude mcp add knowledge-capture -- node "$(pwd)/apps/mcp/dist/index.js"
+```
+
+```json
+// Cowork / Claude Desktop config `mcpServers` block
+// (Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json;
+//  see .mcp.json.example). Use an absolute node path — apps don't inherit PATH.
+"knowledge-capture": {
+  "command": "/opt/homebrew/bin/node",
+  "args": ["/ABSOLUTE/PATH/TO/knowledge-capture/apps/mcp/dist/index.js"]
+}
+```
+
+Restart the client. Don't run both the plugin connector and a manual one of the
+same name. Then, in chat: *"capture how we …"*, *"how do we …?"*, or *"what's in
+the review queue?"* — the **skills** pick these up. On MCP-Apps clients capture
+renders an **interactive review card** (Edit / Promote / Discard).
+
+Tools exposed: `search_knowledge`, `list_units`, `read_unit`,
+`capture_knowledge`, `open_draft`, `update_draft`, `ingest_document`,
+`review_queue`, `promote_unit`, `reject_draft`.
+
+On MCP-Apps clients, `capture_knowledge` and `open_draft` render the draft as an
+**interactive card** — the playbook with **Edit**, **Promote** (name + review
+date), and **Discard** buttons that call `update_draft` / `promote_unit` /
+`reject_draft` through the host bridge. The card is bundled with
+`@modelcontextprotocol/ext-apps` (`apps/mcp/ui/card.ts`) and served as the
+`ui://kg-draft-card` resource (`text/html;profile=mcp-app`). Every tool result
+also carries a plain-text summary, so Claude narrates correctly even though it
+can't see the rendered card.
+
+### Skills
+
+Installed as a Claude Code plugin, the bundle ships three **skills** that wrap the
+raw tools into workflows and trigger on natural phrasing — so you don't have to
+know the tool names:
+
+| Skill | Triggers on | What it does |
+|---|---|---|
+| `recall` | "how do we …", "what's our process for …" | Searches captured knowledge **first**, answers from the firm's own units (never generic advice passed off as firm policy), and respects draft status + confidentiality. |
+| `capture` | "document how we …", "capture this process" | Runs the structured debrief, shows you the draft to confirm, then saves it to the review queue. |
+| `review` | "review the queue", "what's pending" | Walks the maintain stage — open each draft, then promote (with a human's name), edit, or discard. |
+
+Skills live in `plugin/skills/<name>/SKILL.md`, are auto-discovered when the
+plugin is installed, and trigger on natural phrasing or explicitly as
+`/knowledge-capture:recall`, `…:capture`, `…:review`. They drive the MCP tools
+listed above. The **plugin install** (`claude plugins add ./plugin`, above) is the
+recommended way to get them — it adds the skills and the connector together.
+
+If you added the connector manually and want **just the skills**, two more paths:
+
+```shell
+# A) link skills into your personal dir (~/.claude/skills) — works in Cowork, Desktop, CLI
+npm run install-skills        # symlink (repo stays the source of truth)
+# npm run install-skills -- --copy    # copy instead;  uninstall-skills to remove
+
+# B) Claude Code plugin marketplace (this repo ships .claude-plugin/marketplace.json)
+/plugin marketplace add /ABSOLUTE/PATH/TO/knowledge-capture
+/plugin install knowledge-capture@knowledge-capture-local
+```
+
+Restart Cowork / Claude Desktop, or run `/reload-plugins` in the CLI, after any of
+these.
+
+### Run the web app
+
+```bash
+cd nextjs
+cp .env.local.example .env.local   # add your ANTHROPIC_API_KEY
+npm run dev                        # http://localhost:3000
+```
+
+Talk to the interviewer, optionally upload a sample document (PDF / DOCX / TXT /
+MD), then **Generate draft**. Drafts land in the **Review queue** (`/review`),
+where a reviewer edits, then promotes (with their name + a review date) or
+discards. The web app needs `ANTHROPIC_API_KEY`; set
+`CAPTURE_MODEL=claude-opus-4-8` in `.env.local` for production-quality capture
+(it defaults to Sonnet).
+
+## Memory / embeddings
+
+Embeddings run **locally** via `@xenova/transformers` (all-MiniLM-L6-v2, 384-dim),
+cached on disk after first use — nothing is sent to a vector service. It's an
+optional dependency: if it isn't available, search degrades to lexical scoring.
+To use a hosted embedder instead, replace the body of `embed()` in
+`packages/core/src/embed.ts` — it's the only place vectors are produced.
+
+## Configuration
+
+| Env var | Purpose | Default |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | **web app only** (interview + structure pass); the MCP server doesn't need it | — |
+| `KG_HOME` | where the store lives (set the same in both to share memory) | `~/.knowledge-capture` |
+| `CAPTURE_MODEL` | model for the web app's capture/structure | `claude-sonnet-4-6` |
+
+## Security & status caveats
+
+- **Prototype, not hardened.** No auth; `owner` is a free-text field. Put login
+  in front before real users and derive `owner` from the session.
+- **Where data goes.** The MCP server makes **no** model calls (Claude does the
+  structuring) — fully local. The **web app** does call the Anthropic API for the
+  interview and structure pass. Embeddings and the store are always local.
+- **Web `writeUnit` is filesystem-based** — fine on a normal Node host, but
+  Vercel's serverless filesystem is ephemeral; swap the store backend before
+  deploying serverless.
+- **Scanned PDFs / OCR** aren't supported — extraction reads the text layer only
+  (PDF via pdf-parse, DOCX via mammoth, plus txt/md). A scanned image PDF yields
+  no text; legacy `.doc` must be saved as `.docx`. OCR is a future add.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
