@@ -10,7 +10,7 @@
  * The generated file is machine-specific and therefore gitignored — every
  * cloner runs `npm run setup` to write their own.
  *
- *   npm run setup     # build + write plugin/.mcp.json, then `claude plugins add ./plugin`
+ *   npm run setup     # build + write plugin/.mcp.json, then install via the local marketplace
  */
 import { existsSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -41,9 +41,10 @@ writeFileSync(mcpJsonPath, JSON.stringify(config, null, 2) + "\n");
 console.log(`Wrote ${mcpJsonPath}`);
 console.log(`  command: ${process.execPath}`);
 console.log(`  server:  ${serverPath}`);
-console.log(`\nNext:`);
-console.log(`  claude plugins add ${join(repoRoot, "plugin")}`);
-console.log(`  # then restart Cowork / Claude Desktop (or /reload-plugins in the CLI)`);
+console.log(`\nNext — install via the local marketplace, then restart Cowork / Desktop`);
+console.log(`(or /reload-plugins in the CLI):`);
+console.log(`  claude plugin marketplace add ${repoRoot}`);
+console.log(`  claude plugin install knowledge-capture@knowledge-capture-local`);
 console.log(`\nThe plugin now carries both the 3 skills and the local connector.`);
 console.log(`If you previously added the server with "claude mcp add knowledge-capture",`);
 console.log(`remove that one to avoid a duplicate connector.`);

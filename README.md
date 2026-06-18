@@ -80,7 +80,8 @@ The connector is pure local storage + retrieval, so it needs **no API key**.
 
 ```bash
 npm run setup              # builds the server + writes plugin/.mcp.json for your machine
-claude plugins add ./plugin
+claude plugin marketplace add "$(pwd)"
+claude plugin install knowledge-capture@knowledge-capture-local
 ```
 
 Then **restart Cowork / Claude Desktop** (or `/reload-plugins` in the CLI). This
@@ -141,23 +142,19 @@ know the tool names:
 Skills live in `plugin/skills/<name>/SKILL.md`, are auto-discovered when the
 plugin is installed, and trigger on natural phrasing or explicitly as
 `/knowledge-capture:recall`, `…:capture`, `…:review`. They drive the MCP tools
-listed above. The **plugin install** (`claude plugins add ./plugin`, above) is the
+listed above. The **plugin install** (the marketplace flow above) is the
 recommended way to get them — it adds the skills and the connector together.
 
-If you added the connector manually and want **just the skills**, two more paths:
+If you added the connector manually and want **just the skills** (no plugin), link
+them into your personal skills directory (`~/.claude/skills`) — works in Cowork,
+Desktop, and the CLI:
 
 ```shell
-# A) link skills into your personal dir (~/.claude/skills) — works in Cowork, Desktop, CLI
 npm run install-skills        # symlink (repo stays the source of truth)
 # npm run install-skills -- --copy    # copy instead;  uninstall-skills to remove
-
-# B) Claude Code plugin marketplace (this repo ships .claude-plugin/marketplace.json)
-/plugin marketplace add /ABSOLUTE/PATH/TO/knowledge-capture
-/plugin install knowledge-capture@knowledge-capture-local
 ```
 
-Restart Cowork / Claude Desktop, or run `/reload-plugins` in the CLI, after any of
-these.
+Restart Cowork / Claude Desktop, or run `/reload-plugins` in the CLI, afterward.
 
 ### Run the web app
 

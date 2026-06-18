@@ -15,7 +15,8 @@ From the repo root (one-time):
 ```bash
 npm install
 npm run setup            # builds the MCP server + writes this plugin's .mcp.json
-claude plugins add ./plugin
+claude plugin marketplace add /ABSOLUTE/PATH/TO/knowledge-capture
+claude plugin install knowledge-capture@knowledge-capture-local
 ```
 
 Then **restart Cowork / Claude Desktop** (or run `/reload-plugins` in the CLI).
