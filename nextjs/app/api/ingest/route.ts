@@ -5,6 +5,10 @@ import { extractText } from "@/lib/extract";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// Cap upload size: parsing happens in-process, so an unbounded file is a DoS
+// vector. 25 MB is generous for the text-bearing docs this accepts.
+const MAX_BYTES = 25 * 1024 * 1024;
+
 // Accepts a multipart upload (PDF / DOCX / TXT / MD). The server extracts text,
 // indexes it, and proposes a draft unit describing what the document captures.
 export async function POST(req: Request) {
@@ -14,6 +18,9 @@ export async function POST(req: Request) {
 
   if (!(file instanceof File)) {
     return Response.json({ error: "No file uploaded." }, { status: 400 });
+  }
+  if (file.size > MAX_BYTES) {
+    return Response.json({ error: `File too large (max ${MAX_BYTES / 1024 / 1024} MB).` }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

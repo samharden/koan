@@ -66,11 +66,11 @@ structure pass flags `walled` when a capture references a specific client matter
 git clone https://github.com/<your-username>/knowledge-capture.git
 cd knowledge-capture
 npm install        # installs all workspaces
-npm run build      # builds @kg/core + the MCP server (incl. the interactive UI card)
 ```
 
-That's the whole setup. Now run it as a Claude connector, as a web app, or both —
-they share one store.
+Now wire it up as a Claude connector + skills, as a web app, or both — they share
+one store. The Claude path below runs the build for you (via `npm run setup`); for
+the web-app-only path, run `npm run build` first.
 
 ### Add to Claude (Cowork, Desktop, or CLI)
 
@@ -189,7 +189,10 @@ To use a hosted embedder instead, replace the body of `embed()` in
 ## Security & status caveats
 
 - **Prototype, not hardened.** No auth; `owner` is a free-text field. Put login
-  in front before real users and derive `owner` from the session.
+  in front before real users and derive `owner` from the session. (Unit-id inputs
+  are containment-checked to `KG_HOME`, so they can't be used to read or write
+  files outside the store — see `under()`/`inStore` in `packages/core/src/store.ts`
+  and `isSafeId` in `nextjs/lib/ids.ts`.)
 - **Where data goes.** The MCP server makes **no** model calls (Claude does the
   structuring) — fully local. The **web app** does call the Anthropic API for the
   interview and structure pass. Embeddings and the store are always local.

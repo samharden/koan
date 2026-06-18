@@ -30,6 +30,18 @@ const inboxDir = () => sub("inbox");
 const docsDir = () => sub("docs");
 const indexFile = () => sub(".index", "index.json");
 
+// Containment guard. A unit id resolves to a file under units/ or inbox/; an
+// id-or-path must never escape those (via "../" or an absolute path pointing
+// elsewhere). Without this, a caller-supplied id like "/etc/passwd" or
+// "../../secret" would let read/save/promote/reject touch arbitrary files —
+// directly reachable through the web API. Checked on the normalized path.
+function under(dir: string, p: string): boolean {
+  const d = path.resolve(dir);
+  const abs = path.resolve(p);
+  return abs === d || abs.startsWith(d + path.sep);
+}
+const inStore = (p: string) => under(unitsDir(), p) || under(inboxDir(), p);
+
 async function ensureDirs(): Promise<void> {
   for (const d of [unitsDir(), inboxDir(), docsDir(), path.dirname(indexFile())]) {
     await fs.mkdir(d, { recursive: true });
@@ -108,6 +120,7 @@ export async function readUnitFile(idOrPath: string): Promise<string | null> {
     ? [idOrPath]
     : [path.join(unitsDir(), `${idOrPath}.md`), path.join(inboxDir(), `${idOrPath}.md`)];
   for (const c of candidates) {
+    if (!inStore(c)) continue; // never read outside the store
     try {
       return await fs.readFile(c, "utf-8");
     } catch {
@@ -263,15 +276,16 @@ async function resolveExisting(
   idOrPath: string
 ): Promise<{ path: string; scope: "unit" | "inbox" } | null> {
   if (path.isAbsolute(idOrPath)) {
-    if (await exists(idOrPath)) {
-      return { path: idOrPath, scope: idOrPath.startsWith(unitsDir()) ? "unit" : "inbox" };
-    }
+    // Absolute paths are only honored if they sit inside the store; scope is
+    // decided by which managed dir they're under, not a bare prefix match.
+    if (under(unitsDir(), idOrPath) && (await exists(idOrPath))) return { path: idOrPath, scope: "unit" };
+    if (under(inboxDir(), idOrPath) && (await exists(idOrPath))) return { path: idOrPath, scope: "inbox" };
     return null;
   }
   const u = path.join(unitsDir(), `${idOrPath}.md`);
-  if (await exists(u)) return { path: u, scope: "unit" };
+  if (under(unitsDir(), u) && (await exists(u))) return { path: u, scope: "unit" };
   const i = path.join(inboxDir(), `${idOrPath}.md`);
-  if (await exists(i)) return { path: i, scope: "inbox" };
+  if (under(inboxDir(), i) && (await exists(i))) return { path: i, scope: "inbox" };
   return null;
 }
 

@@ -1,5 +1,7 @@
 import { promoteUnit } from "@kg/core";
 
+import { isSafeId } from "@/lib/ids";
+
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
@@ -8,7 +10,7 @@ export async function POST(req: Request) {
     verified_by?: string;
     review_by?: string;
   };
-  if (!id) return Response.json({ error: "id required" }, { status: 400 });
+  if (!isSafeId(id)) return Response.json({ error: "invalid id" }, { status: 400 });
   if (!verified_by || !verified_by.trim()) {
     return Response.json({ error: "Who is verifying this? (verified_by required)" }, { status: 400 });
   }
