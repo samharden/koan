@@ -74,45 +74,41 @@ they share one store.
 
 ### Add to Claude (Cowork, Desktop, or CLI)
 
-The connector is pure local storage + retrieval, so it needs **no API key**.
+Two pieces: a **connector** (the MCP server — tools) and a skills-only **plugin**
+(the workflows). They're configured separately so both Claude surfaces can share
+**one store**. The connector is pure local storage + retrieval — **no API key**.
 
-**Easiest — install the plugin (skills + connector in one).** From the repo root:
-
-```bash
-npm run setup              # builds the server + writes plugin/.mcp.json for your machine
-claude plugin marketplace add "$(pwd)"
-claude plugin install knowledge-capture@knowledge-capture-local
-```
-
-Then **restart Cowork / Claude Desktop** (or `/reload-plugins` in the CLI). This
-installs the three workflow **skills** and the **knowledge-capture connector**
-together. `npm run setup` points the connector at the server built in this repo so
-it runs in place and keeps **local semantic search** — a copied-into-cache bundle
-can't carry the native embedding binaries, so it would silently drop to lexical.
-The generated `plugin/.mcp.json` is machine-specific (gitignored); re-run
-`npm run setup` after moving the repo. See [plugin/README.md](plugin/README.md).
-
-**Manual — add the connector yourself** (skip the plugin, or just want the tools):
+**1. Build + connector.** From the repo root:
 
 ```bash
-# Claude Code (CLI)
-claude mcp add knowledge-capture -- node "$(pwd)/apps/mcp/dist/index.js"
+npm run setup
 ```
+
+`npm run setup` builds the server and registers the **Claude Code CLI** connector
+(`claude mcp add`, user scope), pointing at the server built in this repo so it
+runs in place and keeps **local semantic search**. It picks `KG_HOME` (the store
+location) from `$KG_HOME`, else from your Cowork/Desktop config if you already set
+one there, else the default `~/.knowledge-capture` — so the CLI and Cowork land on
+the **same store** automatically.
+
+For **Cowork / Claude Desktop**, add the connector in the app's config
+(`~/Library/Application Support/Claude/claude_desktop_config.json`; see
+`.mcp.json.example`). Use an absolute `node` path — apps don't inherit your PATH —
+and set the **same `KG_HOME`**:
 
 ```json
-// Cowork / Claude Desktop config `mcpServers` block
-// (Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json;
-//  see .mcp.json.example). Use an absolute node path — apps don't inherit PATH.
 "knowledge-capture": {
   "command": "/opt/homebrew/bin/node",
-  "args": ["/ABSOLUTE/PATH/TO/knowledge-capture/apps/mcp/dist/index.js"]
+  "args": ["/ABSOLUTE/PATH/TO/knowledge-capture/apps/mcp/dist/index.js"],
+  "env": { "KG_HOME": "/ABSOLUTE/PATH/TO/your-store" }
 }
 ```
 
-Restart the client. Don't run both the plugin connector and a manual one of the
-same name. Then, in chat: *"capture how we …"*, *"how do we …?"*, or *"what's in
-the review queue?"* — the **skills** pick these up. On MCP-Apps clients capture
-renders an **interactive review card** (Edit / Promote / Discard).
+**2. Skills plugin** (see [Skills](#skills) below for install per surface).
+
+Restart the client. Then, in chat: *"capture how we …"*, *"how do we …?"*, or
+*"what's in the review queue?"* — the **skills** pick these up. On MCP-Apps clients
+capture renders an **interactive review card** (Edit / Promote / Discard).
 
 Tools exposed: `search_knowledge`, `list_units`, `read_unit`,
 `capture_knowledge`, `open_draft`, `update_draft`, `ingest_document`,
@@ -139,20 +135,23 @@ know the tool names:
 | `capture` | "document how we …", "capture this process" | Runs the structured debrief, shows you the draft to confirm, then saves it to the review queue. |
 | `review` | "review the queue", "what's pending" | Walks the maintain stage — open each draft, then promote (with a human's name), edit, or discard. |
 
-Skills live in `plugin/skills/<name>/SKILL.md`, are auto-discovered when the
-plugin is installed, and trigger on natural phrasing or explicitly as
-`/knowledge-capture:recall`, `…:capture`, `…:review`. They drive the MCP tools
-listed above. The **plugin install** (the marketplace flow above) is the
-recommended way to get them — it adds the skills and the connector together.
-
-If you added the connector manually and want **just the skills** (no plugin), link
-them into your personal skills directory (`~/.claude/skills`) — works in Cowork,
-Desktop, and the CLI:
+The plugin in `plugin/` is **skills-only** (the connector is configured separately,
+above). Skills live in `plugin/skills/<name>/SKILL.md`, trigger on natural phrasing
+or explicitly as `/knowledge-capture:recall`, `…:capture`, `…:review`, and drive
+the connector's tools. Install per surface:
 
 ```shell
-npm run install-skills        # symlink (repo stays the source of truth)
-# npm run install-skills -- --copy    # copy instead;  uninstall-skills to remove
+# Claude Code CLI — via the local marketplace this repo ships
+claude plugin marketplace add /ABSOLUTE/PATH/TO/knowledge-capture
+claude plugin install knowledge-capture@knowledge-capture-local
 ```
+
+- **Cowork / Claude Desktop:** upload the `plugin/` folder via the app's in-app
+  plugin manager (the same flow used for other local plugins). Keep your existing
+  `knowledge-capture` connector in `claude_desktop_config.json` — the plugin is
+  skills-only and won't add a second one.
+- **Any surface, no plugin:** `npm run install-skills` symlinks the skills into
+  `~/.claude/skills` (`-- --copy` to copy; `uninstall-skills` to remove).
 
 Restart Cowork / Claude Desktop, or run `/reload-plugins` in the CLI, afterward.
 

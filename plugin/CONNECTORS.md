@@ -8,10 +8,16 @@ leaves your box.
 
 ## knowledge-capture (local stdio)
 
-Defined in this plugin's `.mcp.json`, which `npm run setup` generates with
-absolute paths to the Node binary and the server built in the repo
-(`apps/mcp/dist/index.js`). It runs in place so on-device semantic search keeps
-working.
+Configured **separately per surface** (not bundled into the plugin), pointing at
+the server built in the repo (`apps/mcp/dist/index.js`) so it runs in place and
+on-device semantic search keeps working:
+
+- **Claude Code CLI:** `npm run setup` runs `claude mcp add` for you (user scope).
+- **Cowork / Claude Desktop:** add it to `claude_desktop_config.json` (below).
+
+Set the **same `KG_HOME`** on both so the two surfaces share one store. `npm run
+setup` auto-detects the `KG_HOME` already in your Cowork/Desktop config and reuses
+it for the CLI.
 
 **Tools exposed**
 
@@ -38,27 +44,27 @@ working.
 - **No API key.** The connector never calls a model. (Only the separate web app
   needs `ANTHROPIC_API_KEY`.)
 
-## Manual connect (fallback)
+## Connector setup
 
-If you'd rather not let the plugin manage the connector, add it yourself and
-keep the plugin skills-only:
-
-**Claude Code CLI**
+**Claude Code CLI** — `npm run setup` does this; the manual equivalent is:
 
 ```bash
-claude mcp add knowledge-capture -- node "$(pwd)/apps/mcp/dist/index.js"
+claude mcp add knowledge-capture -s user \
+  -e KG_HOME="/ABSOLUTE/PATH/TO/your-store" \
+  -- /opt/homebrew/bin/node "$(pwd)/apps/mcp/dist/index.js"
 ```
 
-**Cowork / Claude Desktop** — add to your MCP config's `mcpServers` block (use an
-absolute `node` path from `which node`; desktop apps don't inherit your shell
-PATH):
+**Cowork / Claude Desktop** — add to `claude_desktop_config.json`'s `mcpServers`
+block (absolute `node` path from `which node`; desktop apps don't inherit your
+shell PATH). Use the **same `KG_HOME`** as the CLI:
 
 ```json
 "knowledge-capture": {
   "command": "/opt/homebrew/bin/node",
-  "args": ["/ABSOLUTE/PATH/TO/knowledge-capture/apps/mcp/dist/index.js"]
+  "args": ["/ABSOLUTE/PATH/TO/knowledge-capture/apps/mcp/dist/index.js"],
+  "env": { "KG_HOME": "/ABSOLUTE/PATH/TO/your-store" }
 }
 ```
 
-Restart the client after adding. Don't run both the plugin connector and a manual
-one with the same name, or you'll register it twice.
+Restart the client after adding. Register the connector once per surface — don't
+add it twice on the same surface, or you'll get duplicate tools.

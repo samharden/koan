@@ -1,50 +1,70 @@
 #!/usr/bin/env node
 /**
- * Generate plugin/.mcp.json so the Cowork/Desktop/CLI plugin ships its own
- * connector — pointing at the MCP server built in THIS repo.
+ * Register the knowledge-capture MCP connector for the Claude Code CLI, pointing
+ * at the server built in THIS repo and at a single shared store.
  *
- * Why absolute paths: the server is a local stdio process that resolves
- * @kg/core and its embeddings dep from this repo's node_modules, so it must run
- * in place (that's what keeps local SEMANTIC SEARCH working). The plugin is
- * copied into a cache on install, so a relative path wouldn't reach the server.
- * The generated file is machine-specific and therefore gitignored — every
- * cloner runs `npm run setup` to write their own.
+ * Design: the plugin (plugin/) is skills-only. The connector is configured once
+ * per surface so both surfaces share one store:
+ *   - Cowork / Desktop: claude_desktop_config.json (managed in-app)
+ *   - Claude Code CLI:   this script -> `claude mcp add` (user scope)
  *
- *   npm run setup     # build + write plugin/.mcp.json, then install via the local marketplace
+ * KG_HOME resolution (so CLI and Cowork agree automatically):
+ *   1. $KG_HOME if set
+ *   2. the KG_HOME already configured for knowledge-capture in Cowork/Desktop
+ *   3. ~/.knowledge-capture (the built-in default)
+ *
+ *   npm run setup
  */
-import { existsSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
 const serverPath = join(repoRoot, "apps", "mcp", "dist", "index.js");
-const mcpJsonPath = join(repoRoot, "plugin", ".mcp.json");
 
 if (!existsSync(serverPath)) {
   console.error(`\nMCP server not built yet: ${serverPath}`);
-  console.error(`Run "npm run build" first, then "npm run setup".\n`);
+  console.error(`Run "npm run build" first (or just "npm run setup").\n`);
   process.exit(1);
 }
 
-const config = {
-  mcpServers: {
-    "knowledge-capture": {
-      command: process.execPath, // absolute path to this node binary
-      args: [serverPath],
-    },
-  },
-};
+/** Reuse the KG_HOME Cowork/Desktop already uses, so both surfaces share a store. */
+function kgHomeFromDesktop() {
+  const cfg = join(homedir(), "Library", "Application Support", "Claude", "claude_desktop_config.json");
+  try {
+    const j = JSON.parse(readFileSync(cfg, "utf-8"));
+    return j?.mcpServers?.["knowledge-capture"]?.env?.KG_HOME || null;
+  } catch {
+    return null;
+  }
+}
 
-writeFileSync(mcpJsonPath, JSON.stringify(config, null, 2) + "\n");
+const kgHome = process.env.KG_HOME || kgHomeFromDesktop() || join(homedir(), ".knowledge-capture");
+const source = process.env.KG_HOME ? "$KG_HOME" : kgHomeFromDesktop() ? "Cowork/Desktop config" : "default";
 
-console.log(`Wrote ${mcpJsonPath}`);
-console.log(`  command: ${process.execPath}`);
-console.log(`  server:  ${serverPath}`);
-console.log(`\nNext — install via the local marketplace, then restart Cowork / Desktop`);
-console.log(`(or /reload-plugins in the CLI):`);
-console.log(`  claude plugin marketplace add ${repoRoot}`);
-console.log(`  claude plugin install knowledge-capture@knowledge-capture-local`);
-console.log(`\nThe plugin now carries both the 3 skills and the local connector.`);
-console.log(`If you previously added the server with "claude mcp add knowledge-capture",`);
-console.log(`remove that one to avoid a duplicate connector.`);
+function claude(args) {
+  return execFileSync("claude", args, { stdio: ["ignore", "pipe", "pipe"] }).toString();
+}
+
+try {
+  // Idempotent: drop any prior user-scope entry, then add fresh.
+  try { claude(["mcp", "remove", "knowledge-capture", "-s", "user"]); } catch { /* none yet */ }
+  claude(["mcp", "add", "knowledge-capture", "-s", "user", "-e", `KG_HOME=${kgHome}`, "--", process.execPath, serverPath]);
+} catch (e) {
+  console.error(`\nCouldn't run "claude mcp add" automatically: ${e.message?.split("\n")[0] ?? e}`);
+  console.error(`Run it yourself:\n  claude mcp add knowledge-capture -s user -e KG_HOME="${kgHome}" -- "${process.execPath}" "${serverPath}"\n`);
+  process.exit(1);
+}
+
+console.log(`Registered the CLI connector "knowledge-capture":`);
+console.log(`  store (KG_HOME): ${kgHome}   [from ${source}]`);
+console.log(`  server:          ${serverPath}`);
+console.log(`\nNow install the skills plugin:`);
+console.log(`  CLI:    claude plugin marketplace add ${repoRoot}`);
+console.log(`          claude plugin install knowledge-capture@knowledge-capture-local`);
+console.log(`  Cowork: upload the ${join(repoRoot, "plugin")} folder via the in-app plugin manager`);
+console.log(`          (its connector is already in claude_desktop_config.json — keep that one).`);
+console.log(`\nThen restart Cowork / Desktop, or /reload-plugins in the CLI.`);
