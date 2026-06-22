@@ -1,4 +1,4 @@
-// Containment: a caller-supplied id/path must never read or write outside KG_HOME.
+// Containment: a caller-supplied id/path must never read or write outside KOAN_HOME.
 // Run via `npm test` (builds core first). Uses Node's built-in test runner.
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -6,9 +6,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-// Point the store at a throwaway dir BEFORE importing (kgHome reads this lazily).
+// Point the store at a throwaway dir BEFORE importing (koanHome reads this lazily).
 const home = mkdtempSync(join(tmpdir(), "kg-test-"));
-process.env.KG_HOME = home;
+process.env.KOAN_HOME = home;
 
 const { writeUnit, readUnitFile, saveUnitFile } = await import("../dist/index.js");
 

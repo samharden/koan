@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 /**
- * Knowledge Capture — local MCP server.
+ * Koan — local MCP server.
  *
- * Exposes the shared @kg/core store to Claude over stdio. Runs on the user's
- * machine against their own $KG_HOME, so firm knowledge never leaves their box
- * (except the LLM calls capture/ingest make to the Anthropic API).
+ * Exposes the shared @koan/core store to Claude over stdio. Runs on the user's
+ * machine against their own $KOAN_HOME, so firm knowledge never leaves their box.
+ * The server never calls a model — Claude does all the structuring and drives
+ * these tools; core is pure local storage + retrieval.
  *
  * Tools:
  *   search_knowledge  — semantic/lexical search over captured units + documents
  *   list_units        — list captured units (approved + draft)
  *   read_unit         — read one unit's full markdown
- *   capture_knowledge — turn freeform notes into a draft unit (structure pass)
- *   ingest_document   — index document text and propose a draft unit
+ *   capture_knowledge — save Claude-structured fields as a draft unit
+ *   ingest_document   — index document text into searchable memory
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -23,7 +24,7 @@ import { z } from "zod";
 
 import {
   ingestDocument,
-  kgHome,
+  koanHome,
   listDrafts,
   listUnits,
   promoteUnit,
@@ -33,13 +34,13 @@ import {
   search,
   writeUnit,
   type Unit,
-} from "@kg/core";
+} from "@koan/core";
 
-const server = new McpServer({ name: "knowledge-capture", version: "0.1.0" });
+const server = new McpServer({ name: "koan", version: "0.1.0" });
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
-const CARD_URI = "ui://kg-draft-card";
+const CARD_URI = "ui://koan-draft-card";
 
 server.tool(
   "search_knowledge",
@@ -127,7 +128,7 @@ server.tool(
     owner: z.string().optional(),
   },
   async ({ filename, text: body, owner }) => {
-    const res = await ingestDocument(filename, body, { owner: owner ?? "claude", propose: false });
+    const res = await ingestDocument(filename, body, { owner: owner ?? "claude" });
     return text(
       `Indexed "${filename}": ${res.chunks} chunk(s) into searchable memory.\n` +
         `If this document is worth capturing as a playbook, extract its structure and call capture_knowledge.`
@@ -217,12 +218,12 @@ server.registerTool(
   }
 );
 
-// The debrief interview now lives in the plugin's `capture` skill (better
-// triggering, ships with the plugin) — see plugin/skills/capture/SKILL.md. The
-// web app runs its own interview off @kg/core's SYSTEM persona.
+// The debrief interview lives in the plugin's `capture` skill (see
+// plugin/skills/capture/SKILL.md): Claude runs the interview, then calls
+// capture_knowledge here to save the structured draft.
 
 async function main() {
-  console.error(`[knowledge-capture] store: ${kgHome()}`);
+  console.error(`[koan] store: ${koanHome()}`);
   await server.connect(new StdioServerTransport());
 }
 

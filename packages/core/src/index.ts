@@ -1,8 +1,7 @@
-// Public API of @kg/core — the only surface frontends import.
+// Public API of @koan/core — the only surface the MCP server imports.
 export * from "./types.js";
-export { MODEL, KICKOFF, SYSTEM, CAPTURE_INTERVIEW, UNIT_JSON_SCHEMA, extractUnit, formatTranscript } from "./capture.js";
 export {
-  kgHome,
+  koanHome,
   writeUnit,
   listUnits,
   readUnitFile,

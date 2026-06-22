@@ -1,5 +1,14 @@
 # Institutional Knowledge Platform — Reference Architecture
 
+> **Orientation.** This is the north-star design, not a description of the current
+> build. What ships today (see the [README](README.md)): the four-stage loop, the
+> markdown `inbox/` → `units/` flow, local embedding search with lexical fallback,
+> the review/promote currency loop, and `internal | walled | client`
+> confidentiality. Still aspirational here: a `superseded/` history tier, a
+> generated `index.md`, the materialized knowledge graph (Stage 3 v2), and the
+> `walled:<group>` / `client:<id>` sub-scoping. The point of the abstraction
+> boundary below is that those can be added without rewriting capture or recall.
+
 **Goal:** Capture the "how do we do X" knowledge currently siloed in people's heads, and make it
 reliably retrievable by both humans and AI agents.
 

@@ -6,14 +6,14 @@
  * tool through the ext-apps bridge (app.callServerTool). The draft arrives via
  * the `toolresult` notification's structuredContent.
  *
- * Bundled by esbuild and inlined into the ui://kg-draft-card resource.
+ * Bundled by esbuild and inlined into the ui://koan-draft-card resource.
  */
 import { App } from "@modelcontextprotocol/ext-apps";
 
 type Draft = { id: string; title: string; status: string; confidentiality: string; markdown: string };
 
 const root = document.getElementById("root")!;
-const app = new App({ name: "kg-draft-card", version: "0.1.0" });
+const app = new App({ name: "koan-draft-card", version: "0.1.0" });
 
 let draft: Draft | null = null;
 let mode: "view" | "edit" | "promote" | "done" = "view";

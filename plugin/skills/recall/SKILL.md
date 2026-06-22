@@ -11,7 +11,7 @@ description: >-
 
 # Recall firm knowledge
 
-This firm runs a local knowledge-capture store. When the user asks how *the firm*
+This firm runs a local koan store. When the user asks how *the firm*
 does something, the answer should come from what the firm has actually captured —
 not from generic legal or procedural knowledge. Search first, then answer.
 

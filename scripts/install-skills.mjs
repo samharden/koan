@@ -78,5 +78,5 @@ for (const name of skills) {
 
 if (!uninstall) {
   console.log(`\nDone. Restart Cowork / Claude Desktop (or run /reload-plugins in the CLI) to load: ${skills.join(", ")}.`);
-  console.log(`These skills drive the knowledge-capture MCP server — make sure that connector is added too.`);
+  console.log(`These skills drive the koan MCP server — make sure that connector is added too.`);
 }

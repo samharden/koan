@@ -1,7 +1,7 @@
 {
-  "name": "@kg/core",
+  "name": "@koan/core",
   "version": "0.1.0",
-  "description": "Shared core: file-based knowledge store, local embedding index, retrieval, capture, and document ingest.",
+  "description": "Shared core: file-based knowledge store, local embedding index, retrieval, and document ingest. Pure local — never calls a model.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
@@ -16,9 +16,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -w -p tsconfig.json"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "latest"
   },
   "optionalDependencies": {
     "@xenova/transformers": "^2.17.2"

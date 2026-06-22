@@ -1,7 +1,7 @@
 ---
 name: review
 description: >-
-  Walk the knowledge-capture review queue — the maintain stage — promoting,
+  Walk the koan review queue — the maintain stage — promoting,
   editing, or discarding draft units so they become authoritative firm
   knowledge. Use when the user says "review the queue", "what's pending review",
   "any drafts waiting", "let's clean up the inbox", or wants to approve/promote

@@ -3,9 +3,8 @@ node_modules/
 
 # Build output
 dist/
-.next/
 *.tsbuildinfo
-next-env.d.ts
+plugin.zip
 
 # Secrets & local config — NEVER commit these
 .env
@@ -14,7 +13,7 @@ next-env.d.ts
 .mcp.json
 .claude/settings.local.json
 
-# Local knowledge store (lives in ~/.knowledge-capture, not the repo)
+# Local knowledge store (lives in ~/.koan, not the repo)
 knowledge/
 
 # Python (legacy prototype leftovers)

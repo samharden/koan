@@ -1,7 +1,7 @@
 {
-  "name": "knowledge-capture",
+  "name": "koan",
   "version": "0.1.0",
-  "description": "Skills for capturing, recalling, and reviewing firm know-how. Pairs with the knowledge-capture MCP server (added separately via `claude mcp add`), which provides the tools these skills drive.",
-  "author": { "name": "Knowledge Capture contributors" },
+  "description": "Skills for capturing, recalling, and reviewing firm know-how. Pairs with the koan MCP server (added separately via `claude mcp add`), which provides the tools these skills drive.",
+  "author": { "name": "Koan contributors" },
   "license": "MIT"
 }

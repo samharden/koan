@@ -1,17 +1,16 @@
 {
-  "name": "knowledge-capture-monorepo",
+  "name": "koan",
   "version": "0.1.0",
   "private": true,
-  "description": "Institutional knowledge capture & memory for law firms — web app + Claude MCP plugin, sharing one local-first store.",
+  "description": "Institutional knowledge capture & memory for law firms — a Claude MCP server + plugin over one local-first store.",
   "license": "MIT",
   "workspaces": [
     "packages/*",
-    "apps/*",
-    "nextjs"
+    "apps/*"
   ],
   "scripts": {
-    "build:core": "npm run build -w @kg/core",
-    "build:mcp": "npm run build -w @kg/mcp",
+    "build:core": "npm run build -w @koan/core",
+    "build:mcp": "npm run build -w @koan/mcp",
     "build": "npm run build:core && npm run build:mcp",
     "test": "npm run build:core && node --test \"packages/core/test/*.test.mjs\"",
     "mcp": "node apps/mcp/dist/index.js",

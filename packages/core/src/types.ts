@@ -1,9 +1,7 @@
-export type Role = "user" | "assistant";
-export type Msg = { role: Role; content: string };
-
 export type Confidentiality = "internal" | "walled" | "client";
 
-/** A reusable piece of know-how, as extracted by the structure pass. */
+/** A reusable piece of know-how. Claude structures it (plugin skills / the
+ *  capture_knowledge MCP tool); core just stores and indexes it. */
 export type Unit = {
   title: string;
   practice_area: string[];

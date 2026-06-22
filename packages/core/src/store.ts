@@ -1,15 +1,15 @@
 /**
  * KnowledgeStore — v0 backend: plain markdown files + a JSON embedding index.
  *
- * One store, shared by every frontend (web app, MCP server). Location is
- * KG_HOME (default ~/.knowledge-capture) so the web app and the Claude plugin
+ * One store, shared by every Claude surface (Cowork, Desktop, CLI) through the
+ * MCP server. Location is KOAN_HOME (default ~/.koan) so they all
  * read and write the same memory regardless of working directory.
  *
  * Layout:
- *   $KG_HOME/units/*.md          approved units (source of truth)
- *   $KG_HOME/inbox/*.md          draft units awaiting review
- *   $KG_HOME/docs/*.txt          ingested document text
- *   $KG_HOME/.index/index.json   embedding index (vectors live here)
+ *   $KOAN_HOME/units/*.md          approved units (source of truth)
+ *   $KOAN_HOME/inbox/*.md          draft units awaiting review
+ *   $KOAN_HOME/docs/*.txt          ingested document text
+ *   $KOAN_HOME/.index/index.json   embedding index (vectors live here)
  *
  * To move off the filesystem, reimplement this module against the same exports.
  */
@@ -20,11 +20,13 @@ import path from "node:path";
 import { embed } from "./embed.js";
 import type { IndexEntry, Unit, UnitSource, UnitSummary } from "./types.js";
 
-export function kgHome(): string {
-  return process.env.KG_HOME || path.join(os.homedir(), ".knowledge-capture");
+export function koanHome(): string {
+  // KOAN_HOME is canonical; KG_HOME is read as a fallback for stores configured
+  // before the rename, so existing setups keep working without edits.
+  return process.env.KOAN_HOME || process.env.KG_HOME || path.join(os.homedir(), ".koan");
 }
 
-const sub = (...p: string[]) => path.join(kgHome(), ...p);
+const sub = (...p: string[]) => path.join(koanHome(), ...p);
 const unitsDir = () => sub("units");
 const inboxDir = () => sub("inbox");
 const docsDir = () => sub("docs");
@@ -34,7 +36,8 @@ const indexFile = () => sub(".index", "index.json");
 // id-or-path must never escape those (via "../" or an absolute path pointing
 // elsewhere). Without this, a caller-supplied id like "/etc/passwd" or
 // "../../secret" would let read/save/promote/reject touch arbitrary files —
-// directly reachable through the web API. Checked on the normalized path.
+// reachable through the MCP tools, which take caller-supplied ids. Checked on
+// the normalized path.
 function under(dir: string, p: string): boolean {
   const d = path.resolve(dir);
   const abs = path.resolve(p);
