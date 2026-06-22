@@ -7,6 +7,10 @@ dist/
 plugin.zip
 koan-plugin.zip
 
+# .mcpb bundle staging + artifact (built by scripts/pack-mcpb.mjs)
+build/
+*.mcpb
+
 # Secrets & local config — NEVER commit these
 .env
 .env.local

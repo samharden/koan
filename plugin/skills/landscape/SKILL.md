@@ -32,15 +32,17 @@ Do **not** use this for a single procedure (`recall`), for writing one down
 
 ## Workflow
 
-1. **Gather the whole corpus.** Call `list_units` to get every unit with its
-   scope (`unit` = promoted/active, `inbox` = draft), status, and
-   confidentiality. Note the split between promoted and draft up front.
-2. **Read enough to judge connections, not just titles.** Call `read_unit` on the
-   units that matter for the analysis — at minimum the promoted ones, plus any
-   drafts the user wants included. Titles alone hide the disconnects; you need the
-   `trigger`, `steps`, `authorities`, `exceptions`, and `open_questions` fields to
-   see how units relate. If the corpus is large, say how many you read and
-   prioritize by relevance to what the user asked.
+1. **Gather the whole corpus.** `Glob` `units/*.md` (promoted/active) and
+   `inbox/*.md` (drafts) in the knowledge folder (default
+   `~/Documents/firm-knowledge/`). Note the split between promoted and draft up
+   front. The folder of a file tells you its status: `units/` = active, `inbox/` =
+   draft.
+2. **Read enough to judge connections, not just titles.** `Read` the units that
+   matter for the analysis — at minimum the promoted ones, plus any drafts the user
+   wants included. Titles alone hide the disconnects; you need the `trigger`,
+   `steps`, `authorities`, `exceptions`, and `open_questions` content to see how
+   units relate. If the corpus is large, say how many you read and prioritize by
+   relevance to what the user asked.
 3. **Analyze across units**, looking for:
    - **Gaps** — procedures that are referenced but not captured (a unit's steps
      point to "our intake process" that doesn't exist as its own unit), obvious
@@ -72,8 +74,8 @@ Do **not** use this for a single procedure (`recall`), for writing one down
 
 ## Guardrails
 
-- **Read-only.** This skill never calls `capture_knowledge`, `update_draft`,
-  `promote_unit`, or `reject_draft`. It observes and recommends; the user decides
+- **Read-only.** This skill only reads files — it never writes, moves, or deletes
+  anything in the knowledge folder. It observes and recommends; the user decides
   and acts through the other skills.
 - **Distinguish status in findings.** A contradiction between two promoted units is
   a real problem; a draft conflicting with a promoted unit is expected churn — say

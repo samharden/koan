@@ -36,7 +36,17 @@ import {
   type Unit,
 } from "@koan/core";
 
-const server = new McpServer({ name: "koan", version: "0.1.0" });
+import { loadBundledSkills, serverInstructions } from "./skills.js";
+
+// In the `.mcpb` one-click bundle the skills ride along next to the server and
+// are surfaced as prompts (slash commands); in a source / CLI install this is []
+// because skills are installed as a real plugin instead.
+const bundledSkills = loadBundledSkills();
+
+const server = new McpServer(
+  { name: "koan", version: "0.1.0" },
+  { instructions: serverInstructions(bundledSkills) },
+);
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 
@@ -221,6 +231,31 @@ server.registerTool(
 // The debrief interview lives in the plugin's `capture` skill (see
 // plugin/skills/capture/SKILL.md): Claude runs the interview, then calls
 // capture_knowledge here to save the structured draft.
+
+// Expose each bundled skill as an MCP prompt (`/mcp__koan__<name>`) so one-click
+// `.mcpb` users get the workflows without installing the plugin separately. The
+// prompt body is the SKILL.md itself — the same instructions an installed skill
+// would carry — so there is a single source of truth.
+for (const skill of bundledSkills) {
+  server.registerPrompt(
+    skill.name,
+    { title: `koan: ${skill.name}`, description: skill.description },
+    () => ({
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text:
+              `Follow this Koan "${skill.name}" workflow for what I asked. ` +
+              `Use the koan tools (search_knowledge, capture_knowledge, review_queue, etc.) as it directs.\n\n` +
+              skill.body,
+          },
+        },
+      ],
+    }),
+  );
+}
 
 async function main() {
   console.error(`[koan] store: ${koanHome()}`);

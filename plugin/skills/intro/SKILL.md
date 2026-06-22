@@ -38,8 +38,9 @@ not a wall of text.
   steps, escalation paths — usually live in a few people's heads. Koan captures
   them as small, searchable **units** so anyone can get the firm's actual answer
   instead of generic advice.
-- **Local-first.** The knowledge store runs on the user's own machine via the
-  `koan` connector. Nothing leaves their computer.
+- **Local-first.** The knowledge base is just plain markdown files on the user's
+  own machine (by default `~/Documents/firm-knowledge/`). No server, no database —
+  nothing leaves their computer.
 - **The loop — capture → review → recall:**
   1. **Capture** (`/koan:capture`) — a short debrief turns one "how we do X"
      into a **draft** unit in the review queue.
@@ -53,9 +54,9 @@ not a wall of text.
 Offer to walk the loop once, and let the user pick where to start. Don't force
 the whole tour if they only want one piece.
 
-1. **Check the lay of the land.** Call `list_units` (and optionally
-   `review_queue`) to see whether the store already has anything. Tailor the
-   demo to what you find:
+1. **Check the lay of the land.** `Glob` `units/*.md` and `inbox/*.md` in the
+   knowledge folder (default `~/Documents/firm-knowledge/`) to see whether anything
+   has been captured yet. Tailor the demo to what you find:
    - **Empty store** → start at capture: "Let's write down one thing your firm
      does. Pick something small — how you open a new matter, say." Then hand off
      to `/koan:capture`.
@@ -74,8 +75,8 @@ the whole tour if they only want one piece.
 
 - This skill **orients and demonstrates**; it does not capture, promote, edit, or
   delete anything itself. All real changes go through `capture` and `review`.
-- If the `koan` connector isn't available, don't fake the tour — tell the user
-  the connector needs setting up and point them at the plugin README /
-  CONNECTORS.md, then stop.
+- If the knowledge folder doesn't exist yet, that's fine — it just means nothing
+  has been captured. Don't fake a tour over empty content; start the user at
+  `/koan:capture` so the folder gets created with their first unit.
 - Read the room. A user who clearly knows Koan and just wants to do a task should
   be sent straight to the right skill, not given the tour.

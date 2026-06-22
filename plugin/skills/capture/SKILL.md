@@ -16,6 +16,18 @@ it into reusable, reviewable form. You are a skilled debriefer capturing how
 *this firm actually does the thing* — not giving legal advice and not
 second-guessing their approach.
 
+## Where the knowledge lives
+
+Everything is **plain markdown files on the user's machine** — no server, no
+database. By default the knowledge base is `~/Documents/firm-knowledge/`:
+
+- `inbox/` — **drafts** awaiting review (`draft-<date>-<slug>.md`, `status: draft`)
+- `units/` — **promoted**, authoritative units (`status: active`)
+- `docs/` — ingested document text
+
+Create the folder and these subfolders if they don't exist yet. If the user keeps
+their knowledge somewhere else, use the path they give instead.
+
 ## When to use
 
 Trigger when the user wants to record a procedure or playbook:
@@ -49,16 +61,60 @@ Don't interrogate — if they give a rich answer, move on.
    they're done — lay out the proposed draft: the title, then each section
    (Trigger, Steps, Exceptions/traps, Authorities, Open questions) clearly enough
    to actually read. Ask them to confirm or correct it; apply any fixes.
-2. **Save once confirmed.** Call `capture_knowledge` with the agreed fields
-   (`title`, `trigger`, `steps`, plus `exceptions`, `authorities`, `templates`,
-   `practice_area`, `matter_type`, `confidentiality`, `open_questions`, `owner`).
-   It saves a **draft** and returns an interactive review card.
-3. **Set expectations.** Tell the user it's a DRAFT in the review queue — not
-   authoritative until someone promotes it (`/review`). Surface any open
-   questions you logged for the reviewer.
-4. **Edits after saving.** If they want changes, read the unit (`read_unit`),
-   edit the full markdown, and call `update_draft` with the draft id and the
-   corrected markdown, then show the result.
+2. **Save once confirmed.** Write the draft as a markdown file in `inbox/`. The
+   filename and `id` are `draft-<today YYYY-MM-DD>-<slug>`, where `<slug>` is the
+   title lowercased with every run of non-alphanumeric characters turned into a
+   single `-` (trim leading/trailing `-`). If that filename already exists, append
+   `-2`, `-3`, … Use exactly this format so `review`, `recall`, and `map` read it
+   back cleanly:
+
+   ```markdown
+   ---
+   id: draft-<YYYY-MM-DD>-<slug>
+   title: <title>
+   practice_area: [<area>, …]      # [] if none
+   matter_type: <type or "">
+   status: draft
+   owner: <who described it, or "">
+   source: debrief
+   captured_on: <YYYY-MM-DD>
+   verified_by: ""
+   verified_on: ""
+   review_by: ""
+   confidentiality: internal       # or walled / client
+   related: []
+   templates: [<template>, …]      # [] if none
+   ---
+
+   # <title>
+
+   ## Trigger
+
+   <when this applies — or `_None captured._`>
+
+   ## Steps
+
+   - <step 1>
+   - <step 2>
+
+   ## Exceptions / traps
+
+   - <trap — or `_None captured._`>
+
+   ## Authorities
+
+   - <rule / form / precedent — or `_None captured._`>
+
+   ## Open questions (for reviewer)
+
+   - <anything thin or unconfirmed — or `_None captured._`>
+   ```
+
+3. **Set expectations.** Tell the user it's a DRAFT in `inbox/` — not authoritative
+   until someone promotes it (`/review`). Surface any open questions you logged for
+   the reviewer.
+4. **Edits after saving.** If they want changes, edit the file in place (keep it in
+   `inbox/` with `status: draft`), then show the result.
 
 ## Fidelity
 

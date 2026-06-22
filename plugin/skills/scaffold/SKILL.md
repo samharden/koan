@@ -31,17 +31,17 @@ It has two modes:
 
 ## Snapshot + drift model
 
-A generated skill is a **snapshot**: the steps are baked in so it runs anywhere,
-with or without the koan connector (that portability is the point). To keep
-snapshots honest without re-coupling them to the connector, each one carries a
-`koan_source` fingerprint and is tracked in a manifest:
+A generated skill is a **snapshot**: the steps are baked in so it runs anywhere on
+its own (that portability is the point). To keep snapshots honest, each one carries
+a `koan_source` fingerprint and is tracked in a manifest:
 
 - **Fingerprint = the source unit's `verified_on` date.** That date advances every
   time a human (re-)promotes the unit — i.e. on the *vouched* change. So a
   scaffolded workflow tracks **certified** changes, not arbitrary in-place edits;
   an unreviewed edit shouldn't silently propagate into a deployed workflow anyway.
-- **Manifest** at `$KOAN_HOME/skills/.scaffold-manifest.json` maps each source unit
-  id → the generated skill(s) and the `verified_on` they were built from, so
+- **Manifest** at `<knowledge folder>/skills/.scaffold-manifest.json` (default
+  `~/Documents/firm-knowledge/skills/.scaffold-manifest.json`) maps each source
+  unit id → the generated skill(s) and the `verified_on` they were built from, so
   `--check` knows what exists and whether it's stale.
 
 ## When to use
@@ -56,12 +56,13 @@ workflow artifact from knowledge that already exists and has been vouched for.
 
 ## Workflow
 
-1. **Pick the source unit — promoted only.** Call `list_units` and select the
-   unit the user means. It **must** be a promoted unit (`scope: unit`, active),
-   not a draft (`scope: inbox`). If the user points at a draft, stop and explain:
-   drafts aren't authoritative, so they shouldn't become runnable workflows — send
-   them to `/koan:review` to promote it first.
-2. **Read it in full.** Call `read_unit` to get every field — you need `title`,
+1. **Pick the source unit — promoted only.** `Glob` `units/*.md` and `inbox/*.md`
+   in the knowledge folder (default `~/Documents/firm-knowledge/`) and select the
+   unit the user means. It **must** be a promoted unit (a file in `units/`,
+   `status: active`), not a draft (in `inbox/`). If the user points at a draft, stop
+   and explain: drafts aren't authoritative, so they shouldn't become runnable
+   workflows — send them to `/koan:review` to promote it first.
+2. **Read it in full.** `Read` the unit file to get every field — you need `title`,
    `trigger`, `steps`, `exceptions`, `authorities`, `templates`,
    `confidentiality`, and `open_questions` to generate a faithful skill.
 3. **Confirm scope with the user**, especially:
@@ -115,18 +116,18 @@ workflow artifact from knowledge that already exists and has been vouched for.
    known gaps.
 
    Also include this freshness line: "Freshness — this is a snapshot of unit
-   <id> as of <verified_on>. If the koan connector is available, you may
-   read_unit <id> and check that its verified_on still matches the
+   <id> as of <verified_on>. If the knowledge folder is available, you may Read
+   `units/<id>.md` and check that its verified_on still matches the
    koan_source.verified_on in this file's frontmatter; if it has advanced, the
    unit was re-promoted and this skill should be regenerated with /koan:scaffold.
    Do not block the workflow on this — it is a self-heal hint, not a dependency.">
    ```
 
 5. **Write the file and record it in the manifest.** Write the skill to
-   `$KOAN_HOME/skills/<slug>/SKILL.md` (fall back to the current working directory
-   under `./koan-skills/<slug>/` if `KOAN_HOME` is unset). Then read
-   `$KOAN_HOME/skills/.scaffold-manifest.json` (create `{ "skills": [] }` if
-   absent) and upsert an entry — `{ slug, path, source_id, verified_on,
+   `<knowledge folder>/skills/<slug>/SKILL.md` (default
+   `~/Documents/firm-knowledge/skills/<slug>/SKILL.md`). Then read
+   `<knowledge folder>/skills/.scaffold-manifest.json` (create `{ "skills": [] }`
+   if absent) and upsert an entry — `{ slug, path, source_id, verified_on,
    scaffolded_on }` — keyed by `slug`, so `--check` can find it later. Show the
    user the generated content and the path. Don't overwrite an existing generated
    skill without asking.
@@ -144,11 +145,12 @@ workflow artifact from knowledge that already exists and has been vouched for.
 When the user asks whether their scaffolded skills are current (or invokes
 `/koan:scaffold --check`):
 
-1. **Load the manifest** at `$KOAN_HOME/skills/.scaffold-manifest.json`. If it's
+1. **Load the manifest** at `<knowledge folder>/skills/.scaffold-manifest.json`
+   (default `~/Documents/firm-knowledge/skills/.scaffold-manifest.json`). If it's
    missing or empty, say nothing has been scaffolded yet and stop.
-2. **Compare each entry to its source unit.** For every entry, `read_unit` the
-   `source_id` and compare the unit's current `verified_on` to the entry's
-   stored `verified_on`:
+2. **Compare each entry to its source unit.** For every entry, `Read` the source
+   unit (`units/<source_id>.md`) and compare the unit's current `verified_on` to
+   the entry's stored `verified_on`:
    - **Match** → up to date; no action.
    - **Advanced** → the unit was re-promoted since scaffolding; the skill is
      **stale**.
@@ -166,9 +168,9 @@ When the user asks whether their scaffolded skills are current (or invokes
 
 - **Promoted only.** Never scaffold from a draft. A runnable workflow implies the
   firm stands behind it; that's exactly what promotion certifies.
-- **Don't touch the store.** This skill only *reads* units and *writes a new skill
-  file*. It never calls `capture_knowledge`, `update_draft`, `promote_unit`, or
-  `reject_draft`.
+- **Don't touch the store.** This skill only *reads* unit files and *writes a new
+  skill file* (plus the scaffold manifest). It never edits, moves, promotes, or
+  deletes a unit.
 - **Faithful, not embellished.** The generated steps must come from the unit. Don't
   add procedure the firm never captured, and don't drop exceptions to make the
   workflow look cleaner — the exceptions are often the whole point.

@@ -9,7 +9,7 @@
     {
       "name": "koan",
       "source": "./plugin",
-      "description": "Skills for capturing, recalling, and reviewing firm know-how with the koan MCP server."
+      "description": "Capture, recall, review, and map your firm's 'how do we do X' know-how — stored as plain markdown files on your own machine. Skills-only; no server or API key."
     }
   ]
 }

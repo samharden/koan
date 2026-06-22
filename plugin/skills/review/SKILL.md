@@ -11,10 +11,16 @@ description: >-
 
 # Review the knowledge queue
 
-Captured knowledge is written `status: draft` and sits in the review queue until
-a person vouches for it. This skill walks that queue so drafts become trusted,
-active firm knowledge — or get discarded. **You do not decide what is correct;
-the user does.** Your job is to surface each draft clearly and act on their call.
+Captured knowledge is written `status: draft` and sits in `inbox/` until a person
+vouches for it. This skill walks that queue so drafts become trusted, active firm
+knowledge — or get discarded. **You do not decide what is correct; the user
+does.** Your job is to surface each draft clearly and act on their call.
+
+## Where the knowledge lives
+
+Plain markdown files, by default under `~/Documents/firm-knowledge/`: drafts in
+`inbox/` (`status: draft`), promoted units in `units/` (`status: active`). If the
+user keeps their knowledge elsewhere, use that path.
 
 ## When to use
 
@@ -25,28 +31,26 @@ the user does.** Your job is to surface each draft clearly and act on their call
 
 ## Workflow
 
-1. **List what's waiting.** Call `review_queue` to get the drafts. If it's empty,
-   say so and stop.
-2. **Take them one at a time.** For the draft under review, call `open_draft`
-   with its id to render the interactive review card (edit / promote / discard),
-   or `read_unit` if you just need the text. Present the content faithfully so the
-   user can actually evaluate it — including any open questions logged for the
-   reviewer.
-
-   > Note: the user sees the rendered card, but you only receive the result's
-   > text. Always include a faithful text summary of the draft so your
-   > description matches what they're looking at.
-
+1. **List what's waiting.** `Glob` `inbox/*.md` to get the drafts. If there are
+   none (or no folder), say so and stop.
+2. **Take them one at a time.** `Read` the draft file in full and present its
+   content faithfully so the user can actually evaluate it — title, Trigger, Steps,
+   Exceptions, Authorities, and any open questions logged for the reviewer.
 3. **Act on the user's decision:**
-   - **Promote** → call `promote_unit` with the draft `id` and `verified_by`
-     (who is vouching for it). Optionally pass `review_by` (next-review date,
-     YYYY-MM-DD; defaults to +180 days). Promoting moves it out of the inbox,
-     drops the `draft-` id prefix, and marks it active. Confirm the content with
-     the user before promoting — get a real name for `verified_by`, not a guess.
-   - **Edit first** → read the unit, edit the full markdown, call `update_draft`
-     with the id and corrected markdown, show the result, then promote once they
-     approve.
-   - **Discard** → call `reject_draft` with the id for drafts that should not
+   - **Promote** → confirm the content with the user and get a **real name** for
+     who is vouching for it (`verified_by`) — not a guess. Then turn the draft into
+     a promoted unit:
+     1. Compute the new id = the draft's `id` with the leading `draft-` removed
+        (e.g. `draft-2026-06-22-intake` → `2026-06-22-intake`). If
+        `units/<new-id>.md` already exists, append `-2`, `-3`, …
+     2. In the file's frontmatter set `status: active`, `verified_by: <name>`,
+        `verified_on: <today YYYY-MM-DD>`, `review_by: <date>` (default today +180
+        days unless the user gives one), and `id: <new-id>`.
+     3. **Write** the updated content to `units/<new-id>.md` and **delete** the old
+        `inbox/<draft>.md` (it has moved, not been copied).
+   - **Edit first** → edit the draft file in `inbox/`, show the result, then promote
+     once they approve.
+   - **Discard** → **delete** the `inbox/<draft>.md` file for drafts that should not
      become firm knowledge.
 4. **Move to the next draft** until the queue is clear or the user stops.
 

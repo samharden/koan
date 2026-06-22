@@ -1,68 +1,69 @@
 # Koan — Cowork plugin
 
-Capture, recall, and review your firm's "how do we do X" know-how from inside
-Claude (Cowork, Claude Desktop, or the Claude Code CLI). This plugin is
-**skills-only**: it adds three workflow **skills** that drive the separate
-`koan` **connector** (the local MCP server). Your knowledge never
-leaves your machine.
-
-This directory is the installable plugin. The store, MCP server source, and
-connector setup live in the parent repo; see the
-[top-level README](../README.md).
+Capture, recall, review, and map your firm's "how do we do X" know-how from inside
+Claude. **Skills-only and fully local:** your knowledge lives as plain markdown
+files on your own machine — no server, no database, no API key, nothing leaves
+your computer.
 
 ## Install
 
-First set up the connector once (from the repo root):
+In **Cowork / Claude Desktop**, upload this `plugin/` folder via the in-app plugin
+manager, then restart the app. That's it — the seven skills below are ready to
+use. (Claude Code CLI: `claude plugin marketplace add /ABSOLUTE/PATH/TO/koan` then
+`claude plugin install koan@koan-local`, and `/reload-plugins`.)
 
-```bash
-npm install
-npm run setup            # builds the server + registers the CLI connector (shared KOAN_HOME)
+Nothing else to configure — no connector, no `npm install`, no build step.
+
+## Where your knowledge lives
+
+The skills read and write plain markdown in one folder, by default
+`~/Documents/firm-knowledge/` (created on your first capture):
+
+```
+~/Documents/firm-knowledge/
+├── inbox/   drafts awaiting review     (status: draft)
+├── units/   promoted, trusted units    (status: active)
+└── docs/    ingested document text
 ```
 
-Then install the skills, per surface:
-
-```bash
-# Claude Code CLI
-claude plugin marketplace add /ABSOLUTE/PATH/TO/koan
-claude plugin install koan@koan-local
-```
-
-- **Cowork / Claude Desktop:** upload this `plugin/` folder via the in-app plugin
-  manager. Add the `koan` connector in
-  `claude_desktop_config.json` (see [CONNECTORS.md](CONNECTORS.md)) with the same
-  `KOAN_HOME` as the CLI, so both surfaces share one store.
-
-Then **restart Cowork / Claude Desktop** (or run `/reload-plugins` in the CLI).
-
-Why skills-only: a plugin is copied into a cache on install, but the MCP server
-must run in place from the repo (it resolves `@koan/core` and the native embedding
-binaries from the repo's `node_modules`) to keep **local semantic search**. So the
-connector is configured separately per surface rather than bundled into the plugin.
+It's just files — back them up, sync them, or put them in git like anything else.
+Prefer a different location? Tell Claude where, and the skills will use it.
 
 ## Skills
 
 | Skill | Triggers on | What it does |
 |---|---|---|
 | `intro` | "what is this", "how does this work", "give me a tour" | Orients a new user and runs a short guided demo of the capture → review → recall loop, then hands off to the real skills. Doesn't change any knowledge itself. |
-| `recall` | "how do we …", "what's our process for …" | Searches captured knowledge **first**, answers from the firm's own units (never generic advice as firm policy), respects draft status + confidentiality. |
-| `capture` | "document how we …", "capture this process" | Runs a short structured debrief, shows you the draft to confirm, then saves it to the review queue. |
-| `review` | "review the queue", "what's pending" | Walks the maintain stage — open each draft, then promote (with a human's name), edit, or discard. |
+| `recall` | "how do we …", "what's our process for …" | Searches your captured files **first**, answers from the firm's own units (never generic advice as firm policy), respects draft status + confidentiality. |
+| `capture` | "document how we …", "capture this process" | Runs a short structured debrief, shows you the draft to confirm, then saves it to `inbox/` for review. |
+| `review` | "review the queue", "what's pending" | Walks the drafts in `inbox/` — read each, then promote (with a human's name) to `units/`, edit, or discard. |
 | `landscape` | "where are the gaps", "do any of these conflict", "audit the knowledge base" | Reads all units together and reports gaps, overlaps, contradictions, and disconnects. Read-only audit; recommends follow-ups but changes nothing. |
 | `map` | "visualize the landscape", "map the knowledge", "show me the graph" | Renders the units as an interactive graph (inline + a standalone offline HTML file) — nodes by practice area, edges for related/overlap/contradiction, gaps and confidential units marked. Read-only. |
-| `scaffold` | "turn this into a skill", "make this a workflow", "deploy this process", "are my skills up to date" | Turns a **promoted** unit into a runnable `SKILL.md` you can invoke as a workflow — the inverse of capture. Generates a skill file (doesn't change the store); `--check` finds scaffolded skills whose source unit was re-promoted and regenerates them. |
+| `scaffold` | "turn this into a skill", "make this a workflow", "deploy this process", "are my skills up to date" | Turns a **promoted** unit into a runnable `SKILL.md` you can invoke as a workflow — the inverse of capture. Generates a skill file (doesn't change your units); `--check` finds scaffolded skills whose source unit was re-promoted and regenerates them. |
 
 Skills trigger on natural phrasing, or invoke explicitly: `/koan:intro`,
 `/koan:recall`, `/koan:capture`, `/koan:review`, `/koan:landscape`, `/koan:map`,
 `/koan:scaffold`.
 
-## Connector
+## The lifecycle
 
-The `koan` connector exposes: `search_knowledge`, `list_units`,
-`read_unit`, `capture_knowledge`, `open_draft`, `update_draft`, `ingest_document`,
-`review_queue`, `promote_unit`, `reject_draft`. See [CONNECTORS.md](CONNECTORS.md)
-for setup on each surface and the shared-store (`KOAN_HOME`) details.
+**Capture → review → recall**, plus an optional **deploy**:
 
-## Without the plugin
+1. **Capture** turns one "how we do X" into a **draft** in `inbox/`.
+2. **Review** is where a human reads each draft and **promotes** it to `units/`
+   (stamping who vouched for it and a next-review date), edits it, or discards it.
+   Drafts are *not* authoritative until promoted.
+3. **Recall** answers "how do we …" questions from the promoted units, attributed
+   to the source, never invented.
+4. **Scaffold** (optional) turns a promoted unit into a runnable workflow skill.
 
-Prefer not to install a plugin? Link just the skills into your personal skills
-directory — see the top-level README's `npm run install-skills` path.
+`confidentiality` is a first-class field on every unit — `internal` by default,
+`walled` when a capture references a specific client matter that needs an ethical
+screen, `client` for client-owned material. The skills surface and respect it.
+
+## Note on search
+
+Recall uses Claude reading and searching your files directly — fast and accurate
+at a firm's scale (tens to hundreds of procedures). There's no separate semantic
+index to build or maintain; the tradeoff is that matching is keyword/meaning-based
+reading rather than vector similarity, which only matters at much larger scale.

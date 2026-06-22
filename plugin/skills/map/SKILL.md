@@ -34,11 +34,12 @@ it — they share the same data-gathering.
 
 ## Workflow
 
-1. **Gather the corpus.** Call `list_units` for every unit (note `scope`:
-   `unit` = promoted, `inbox` = draft; plus `status` and `confidentiality`).
-   Then `read_unit` on the units you'll map — you need `practice_area`,
-   `trigger`, `steps`, `authorities`, and `exceptions` to infer relationships,
-   not just titles. If the corpus is large, say how many you read.
+1. **Gather the corpus.** `Glob` `units/*.md` (promoted) and `inbox/*.md` (drafts)
+   in the knowledge folder (default `~/Documents/firm-knowledge/`); a file's folder
+   gives its status (`units/` → promoted, `inbox/` → draft). Then `Read` the units
+   you'll map — you need `practice_area`, `trigger`, `steps`, `authorities`, and
+   `exceptions` to infer relationships, not just titles. If the corpus is large,
+   say how many you read.
 2. **Build the graph model** as JSON in this exact shape (the bundled template
    reads it):
    ```json
@@ -77,8 +78,8 @@ it — they share the same data-gathering.
 4. **Write the standalone HTML.** Read the bundled `template.html` (in this
    skill's directory), replace the token `/*__GRAPH_DATA__*/` — and the inert
    default object immediately after it — with your graph JSON, and write the
-   result to `$KOAN_HOME/landscape-map.html` (fall back to the current working
-   directory if `KOAN_HOME` is unset). The template is self-contained (no network,
+   result to `landscape-map.html` in the knowledge folder (default
+   `~/Documents/firm-knowledge/landscape-map.html`). The template is self-contained (no network,
    no CDN) and gives an interactive force-directed map with hover details, drag,
    pan, and zoom. Tell the user the path and that they can open it in a browser.
 
@@ -104,8 +105,8 @@ it — they share the same data-gathering.
 
 ## Guardrails
 
-- **Read-only.** No `capture_knowledge`, `update_draft`, `promote_unit`, or
-  `reject_draft`. Visualize and recommend only.
+- **Read-only.** Only reads unit files and writes the `landscape-map.html` output;
+  it never changes, moves, or deletes any unit. Visualize and recommend only.
 - **Don't fabricate structure.** Every edge must trace to something in the units'
   content; every gap node to a real dangling reference. An honest sparse graph
   beats an invented web.
