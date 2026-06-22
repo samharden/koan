@@ -81,6 +81,23 @@ it — they share the same data-gathering.
    directory if `KOAN_HOME` is unset). The template is self-contained (no network,
    no CDN) and gives an interactive force-directed map with hover details, drag,
    pan, and zoom. Tell the user the path and that they can open it in a browser.
+
+   **Security — escape the JSON before embedding it.** The graph JSON is written
+   *inside* the template's inline `<script>` block, so any unit-derived string
+   (title, trigger, practice area) that contains `</script>` would break out of
+   the script and could inject markup — unit content is only semi-trusted (it can
+   come from ingested documents). After serializing the JSON, escape every `<` as
+   a unicode escape so it cannot terminate the script tag — concretely:
+
+   ```js
+   JSON.stringify(graph).replace(/</g, "\\u003c")
+   ```
+
+   (optionally also escape `>` and `&` the same way). These are valid JSON escapes
+   that `JSON.parse` reads back identically, so the map is unchanged but no field
+   can break out of the `<script>` block. The template also HTML-escapes these
+   values at render time (`esc()`), but that is a second layer — do the write-time
+   `<` escaping regardless.
 5. **Point back to action.** The map shows problems; it doesn't fix them. For
    contradictions/overlaps point to `/koan:review`, for gaps point to
    `/koan:capture` — but don't perform those here.

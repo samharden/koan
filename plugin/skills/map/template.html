@@ -83,6 +83,8 @@ const svg = document.getElementById('svg');
 const tip = document.getElementById('tip');
 const NS = 'http://www.w3.org/2000/svg';
 const PALETTE = ['#5b8def','#4cc38a','#d9883b','#a86ee0','#e5689a','#46b0c9','#c9a13b','#7a86f0'];
+// Unit-derived strings (title/trigger/area) may contain markup; escape before any innerHTML use.
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // area -> color
 const areas = [...new Set(GRAPH.nodes.filter(n=>n.type!=='gap').map(n=>n.practiceArea||'—'))];
@@ -97,7 +99,7 @@ document.getElementById('s-draft').textContent = GRAPH.stats.draft ?? 0;
 document.getElementById('s-gaps').textContent = GRAPH.stats.gaps ?? GRAPH.nodes.filter(n=>n.type==='gap').length;
 const al = document.getElementById('area-legend');
 areas.forEach(a => { const d=document.createElement('div'); d.className='legend-row';
-  d.innerHTML = `<span class="swatch" style="background:${areaColor(a)}"></span>${a}`; al.appendChild(d); });
+  d.innerHTML = `<span class="swatch" style="background:${areaColor(a)}"></span>${esc(a)}`; al.appendChild(d); });
 
 // layout
 let W = svg.clientWidth || 900, H = svg.clientHeight || 600;
@@ -131,11 +133,11 @@ const nodeEls = nodes.map(n=>{ const g=document.createElementNS(NS,'g'); g.setAt
   return g; });
 
 function showTip(ev, n){
-  const conf = n.confidentiality && n.confidentiality!=='internal' ? ` · ${n.confidentiality}` : '';
-  tip.innerHTML = `<h3>${n.title||n.id}</h3>`+
+  const conf = n.confidentiality && n.confidentiality!=='internal' ? ` · ${esc(n.confidentiality)}` : '';
+  tip.innerHTML = `<h3>${esc(n.title||n.id)}</h3>`+
     `<div class="meta">${n.type==='gap'?'<span class="pill" style="background:var(--gap);color:#fff">GAP — not captured</span>':
-      `<span class="pill" style="background:${n.status==='draft'?'var(--draft)':'var(--promoted)'};color:#0f1115">${(n.status||'unit')}</span> ${n.practiceArea||''}${conf}`}</div>`+
-    (n.trigger?`<div class="trig">${n.trigger}</div>`:'');
+      `<span class="pill" style="background:${n.status==='draft'?'var(--draft)':'var(--promoted)'};color:#0f1115">${esc(n.status||'unit')}</span> ${esc(n.practiceArea||'')}${conf}`}</div>`+
+    (n.trigger?`<div class="trig">${esc(n.trigger)}</div>`:'');
   tip.style.opacity = 1;
   const r = svg.getBoundingClientRect();
   tip.style.left = Math.min(ev.clientX - r.left + 14, r.width - 290) + 'px';

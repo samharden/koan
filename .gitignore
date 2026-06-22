@@ -5,6 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 plugin.zip
+koan-plugin.zip
 
 # Secrets & local config — NEVER commit these
 .env
