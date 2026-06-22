@@ -110,11 +110,35 @@ Don't interrogate — if they give a rich answer, move on.
    - <anything thin or unconfirmed — or `_None captured._`>
    ```
 
-3. **Set expectations.** Tell the user it's a DRAFT in `inbox/` — not authoritative
+3. **Show the saved draft as an interactive card.** Render the draft as a review
+   card with **Promote / Edit / Discard** buttons (see [Render the review
+   card](#render-the-review-card) below). If the surface can't render interactive
+   HTML, fall back to a clean formatted summary and tell the user they can reply
+   *promote* / *edit* / *discard*.
+4. **Set expectations.** Tell the user it's a DRAFT in `inbox/` — not authoritative
    until someone promotes it (`/review`). Surface any open questions you logged for
    the reviewer.
-4. **Edits after saving.** If they want changes, edit the file in place (keep it in
-   `inbox/` with `status: draft`), then show the result.
+5. **Edits after saving.** If they want changes, edit the file in place (keep it in
+   `inbox/` with `status: draft`), then re-render the card.
+
+## Render the review card
+
+The plugin ships a self-contained card template at `../_shared/draft-card.html`
+(relative to this skill's folder). To show a draft as an interactive card:
+
+1. `Read` `../_shared/draft-card.html`.
+2. Replace the token `/*__DRAFT__*/…/*__END_DRAFT__*/` (the placeholder object
+   between those markers) with the draft as a JSON object —
+   `{ id, title, status, confidentiality, trigger, steps, exceptions, authorities,
+   openQuestions }` — **escaping every `<` as `<`** so unit text can't break
+   out of the `<script>` block (the same rule the `map` skill uses).
+3. Render the result inline as an interactive widget/artifact.
+
+The card's buttons call `sendPrompt(...)`: **Promote** sends a promote request
+(with the name typed into the "Verified by" field, or asks for one), **Edit** asks
+to edit the draft, **Discard** asks to discard it — each carries the draft `id`, so
+the `review` skill picks it up and does the file operation. The card drives the
+workflow through chat; it doesn't change files by itself.
 
 ## Fidelity
 

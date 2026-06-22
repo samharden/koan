@@ -1,0 +1,75 @@
+<h2 class="sr-only">Koan draft review card with edit, promote, and discard actions.</h2>
+<div id="koan-card" style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.25rem; max-width: 640px;"></div>
+
+<script>
+  // The skill replaces the token below with the draft as JSON, escaping every
+  // "<" as < so unit content (which can come from ingested documents) can
+  // never break out of this <script> block. JSON.parse reads it back identically.
+  const DRAFT = /*__DRAFT__*/{
+    id: "draft-0000-00-00-example",
+    title: "Example draft",
+    status: "draft",
+    confidentiality: "internal",
+    trigger: "When this procedure applies.",
+    steps: ["First step", "Second step"],
+    exceptions: ["A trap to avoid"],
+    authorities: [],
+    openQuestions: []
+  }/*__END_DRAFT__*/;
+
+  const esc = (s) => String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const labelStyle = "font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;";
+  const section = (title, items, muted) => {
+    const list = (items || []).filter(Boolean);
+    if (!list.length) return "";
+    const color = muted ? "color:var(--color-text-secondary);" : "";
+    return `<div style="${labelStyle}">${esc(title)}</div>`
+      + `<ul style="font-size:15px;line-height:1.6;margin:0 0 16px;padding-left:1.2rem;${color}">`
+      + list.map((i) => `<li>${esc(i)}</li>`).join("") + `</ul>`;
+  };
+  const para = (title, text) => {
+    if (!text) return "";
+    return `<div style="${labelStyle}">${esc(title)}</div>`
+      + `<div style="font-size:15px;line-height:1.6;margin-bottom:16px;">${esc(text)}</div>`;
+  };
+  const promoted = DRAFT.status === "active";
+  const statusBg = promoted ? "var(--color-background-success)" : "var(--color-background-warning)";
+  const statusFg = promoted ? "var(--color-text-success)" : "var(--color-text-warning)";
+
+  document.getElementById("koan-card").innerHTML =
+    `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">`
+    + `<div style="font-size:18px;font-weight:500;">${esc(DRAFT.title)}</div>`
+    + `<div style="display:flex;gap:6px;flex-shrink:0;">`
+    + `<span style="font-size:12px;padding:3px 10px;border-radius:var(--border-radius-md);background:${statusBg};color:${statusFg};">${esc(DRAFT.status)}</span>`
+    + `<span style="font-size:12px;padding:3px 10px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);">${esc(DRAFT.confidentiality || "internal")}</span>`
+    + `</div></div>`
+    + `<div style="font-size:13px;color:var(--color-text-tertiary);margin-bottom:16px;">${esc(DRAFT.id)}</div>`
+    + para("Trigger", DRAFT.trigger)
+    + section("Steps", DRAFT.steps)
+    + section("Exceptions / traps", DRAFT.exceptions)
+    + section("Authorities", DRAFT.authorities)
+    + section("Open questions (for reviewer)", DRAFT.openQuestions, true)
+    + `<div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:16px;">`
+    + `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">`
+    + `<input id="koan-verifier" type="text" placeholder="Verified by (your name)" style="flex:1;min-width:160px;" />`
+    + `<button id="koan-promote">Promote &#8599;</button>`
+    + `<button id="koan-edit">Edit &#8599;</button>`
+    + `<button id="koan-discard" style="color:var(--color-text-danger);border-color:var(--color-border-danger);">Discard &#8599;</button>`
+    + `</div>`
+    + `<div style="font-size:12px;color:var(--color-text-tertiary);margin-top:10px;">Promote moves this to your trusted units and stamps who vouched for it. Nothing is authoritative until you do.</div>`
+    + `</div>`;
+
+  document.getElementById("koan-promote").addEventListener("click", () => {
+    const who = document.getElementById("koan-verifier").value.trim();
+    sendPrompt(who
+      ? `Promote the koan draft "${DRAFT.id}" — I'm vouching for it as ${who}.`
+      : `Let's promote the koan draft "${DRAFT.id}". Ask me who should be recorded as verifying it.`);
+  });
+  document.getElementById("koan-edit").addEventListener("click", () => {
+    sendPrompt(`I want to edit the koan draft "${DRAFT.id}" before promoting it.`);
+  });
+  document.getElementById("koan-discard").addEventListener("click", () => {
+    sendPrompt(`Discard the koan draft "${DRAFT.id}" — it shouldn't become firm knowledge.`);
+  });
+</script>

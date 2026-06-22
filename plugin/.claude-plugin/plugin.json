@@ -1,6 +1,6 @@
 {
   "name": "koan",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Capture, recall, review, and map your firm's 'how do we do X' know-how — stored as plain markdown files on your own machine. Skills-only; no server or API key required.",
   "author": { "name": "Koan contributors" },
   "license": "MIT"

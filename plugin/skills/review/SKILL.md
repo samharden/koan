@@ -33,9 +33,16 @@ user keeps their knowledge elsewhere, use that path.
 
 1. **List what's waiting.** `Glob` `inbox/*.md` to get the drafts. If there are
    none (or no folder), say so and stop.
-2. **Take them one at a time.** `Read` the draft file in full and present its
-   content faithfully so the user can actually evaluate it — title, Trigger, Steps,
-   Exceptions, Authorities, and any open questions logged for the reviewer.
+2. **Take them one at a time.** `Read` the draft file in full and present it as an
+   interactive review card with **Promote / Edit / Discard** buttons — `Read` the
+   template at `../_shared/draft-card.html` (relative to this skill's folder),
+   replace the `/*__DRAFT__*/…/*__END_DRAFT__*/` token with the draft as JSON
+   (`{ id, title, status, confidentiality, trigger, steps, exceptions, authorities,
+   openQuestions }`, escaping every `<` as `<`), and render it inline. The
+   buttons send promote/edit/discard requests back through chat (carrying the
+   draft `id`). If the surface can't render interactive HTML, present the draft as
+   a clean formatted summary instead — including any open questions logged for the
+   reviewer — and let the user reply *promote* / *edit* / *discard*.
 3. **Act on the user's decision:**
    - **Promote** → confirm the content with the user and get a **real name** for
      who is vouching for it (`verified_by`) — not a guess. Then turn the draft into
