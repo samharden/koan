@@ -3,8 +3,9 @@
 
 <script>
   // The skill replaces the token below with the draft as JSON, escaping every
-  // "<" as < so unit content (which can come from ingested documents) can
-  // never break out of this <script> block. JSON.parse reads it back identically.
+  // "<" as \u003c so unit content (which can come from ingested documents) can
+  // never break out of this script block. \u003c is a valid string escape, so
+  // the embedded object reads back identically.
   const DRAFT = /*__DRAFT__*/{
     id: "draft-0000-00-00-example",
     title: "Example draft",

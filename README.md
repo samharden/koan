@@ -7,7 +7,7 @@ knowledge lives in plain markdown files on your own machine.
 Built for law firms (confidentiality and ethical-wall aware), but the core is
 domain-agnostic.
 
-> **Koan ships as a skills-only Claude plugin** (built for **Cowork**). The seven
+> **Koan ships as a skills-only Claude plugin** (built for **Cowork**). The eight
 > skills read and write your knowledge as plain markdown files using Claude's own
 > file tools — **no server, no database, no API key, nothing to build.** Install
 > the `plugin/` folder and you're done. An optional local MCP server (in this
@@ -21,7 +21,7 @@ domain-agnostic.
    ├─ skills (plugin/)  ── the capture → review → recall → deploy workflows
    └─ file tools        ── read / write / search plain markdown
                   ▼
-       ~/Documents/firm-knowledge/   (inbox/ · units/ · docs/)
+       ~/Documents/firm-knowledge/   (INDEX.md · inbox/ · units/ · archive/ · docs/)
 ```
 
 Claude runs the interview, structures the knowledge, and reads/writes the files
@@ -31,7 +31,7 @@ model is called beyond the Claude you're already talking to.
 ## Repo layout
 
 ```
-plugin/          the product — Claude skills-only plugin (intro · capture · recall · review · landscape · map · scaffold)
+plugin/          the product — Claude skills-only plugin (intro · capture · ingest · recall · review · landscape · map · scaffold)
 packages/core/   @koan/core — store, local embeddings, retrieval (powers the OPTIONAL MCP server)
 apps/mcp/        OPTIONAL local stdio MCP server (the connector) + the draft-review card
 scripts/         setup-plugin (register the connector) · pack-mcpb (.mcpb bundle) · install-skills
@@ -41,16 +41,27 @@ reference-architecture.md   the design this implements
 ## The knowledge lifecycle
 
 1. **Capture** — the `capture` skill runs a short debrief and Claude structures
-   your answers into a unit.
+   your answers into a unit — or, right after a task ("capture what we just
+   did"), distills the unit from the work already done in the conversation
+   instead of interviewing you. The `ingest` skill is the document-shaped
+   entrance: it stores an existing document's text in `docs/` and can extract
+   the procedures it describes as drafts into the same queue.
 2. **Structure** — Claude writes the unit as a **draft** markdown file to
    `~/Documents/firm-knowledge/inbox/`.
 3. **Serve** — the `recall` skill searches your files (titles + content) and
-   answers from the firm's own units, attributed to the source.
+   answers from the firm's own units, attributed to the source. When it can't
+   answer, it logs the question to `gaps.md` — demand-side evidence of what the
+   firm should capture next, which `landscape` and `map` surface.
 4. **Maintain** — every unit is written `status: draft` and is never treated as
    authoritative until a human reviews it and **promotes** it (via the `review`
    skill) to `units/`, stamping `verified_by`, `verified_on`, and a `review_by`
    date. Promotion drops the `draft-` id prefix and flips `status` to `active`;
-   drafts can also be edited or discarded.
+   drafts can also be edited or discarded. When a promoted unit's `review_by`
+   date passes, `review` surfaces it again for re-vouching, updating, or
+   retiring — so vouched knowledge doesn't silently go stale. Retired units
+   move to `archive/` (`status: retired`), never the trash: the record of what
+   the procedure *used to be* stays available; only unpromoted drafts are ever
+   deleted.
 5. **Deploy** — a promoted unit can be turned into a *runnable* workflow, not just
    a retrievable one: the `scaffold` skill maps a unit's steps, exceptions, and
    authorities into a generated `SKILL.md` you install and invoke in Cowork /
@@ -70,7 +81,7 @@ Confidentiality is a first-class field (`internal | walled | client`); flag
 
 In **Cowork / Claude Desktop**, upload the **`plugin/`** folder via the in-app
 plugin manager, then restart the app. Done — no Node, no terminal, no build, no
-config files, no connector. The seven skills are ready, and your first capture
+config files, no connector. The eight skills are ready, and your first capture
 creates the knowledge folder at `~/Documents/firm-knowledge/`.
 
 > Why this is all you need: in Cowork, Claude has file tools, so the skills read
@@ -79,9 +90,9 @@ creates the knowledge folder at `~/Documents/firm-knowledge/`.
 > "this extension can access your computer" install warning** to worry your users.
 
 The skills (`plugin/skills/<name>/SKILL.md`) trigger on natural phrasing or
-explicitly as `/koan:intro`, `…:capture`, `…:recall`, `…:review`, `…:landscape`,
-`…:map`, `…:scaffold`. See [plugin/README.md](plugin/README.md) for the per-skill
-table and the on-disk layout.
+explicitly as `/koan:intro`, `…:capture`, `…:ingest`, `…:recall`, `…:review`,
+`…:landscape`, `…:map`, `…:scaffold`. See [plugin/README.md](plugin/README.md)
+for the per-skill table and the on-disk layout.
 
 **Claude Code CLI** (optional): `claude plugin marketplace add
 /ABSOLUTE/PATH/TO/koan` then `claude plugin install koan@koan-local`, and
@@ -144,15 +155,29 @@ nothing matches, it says so and offers to capture it.
 
 ## How recall finds things
 
-The skills search your knowledge folder with Claude's own file tools — listing and
-grepping `units/` and `inbox/`, then reading the best matches in full. At a firm's
-scale (tens to hundreds of procedures) that's fast and accurate, and there's no
-index to build or keep in sync.
+Recall reads `INDEX.md` first — a maintained table of contents with one line per
+unit (title, practice areas, trigger hook), so a single read usually identifies
+the right unit — then reads the matching files in full, falling back to listing
+and grepping `units/` and `inbox/` when the index misses. The writing skills
+keep the index current and `review` rebuilds it if it drifts; the folders are
+always the truth. At a firm's scale (tens to hundreds of procedures) that's fast
+and accurate.
 
 For a **much** larger corpus you can add the optional MCP server, which builds a
 local vector index for semantic ranking — embeddings run on-device via
 `@xenova/transformers` (all-MiniLM-L6-v2), cached after first use, nothing sent to
 a vector service. See [Optional: the MCP server](#optional-the-mcp-server).
+
+## Sharing across the firm
+
+Institutional knowledge is for other people, so put the knowledge folder
+somewhere shared — a synced drive (Dropbox / OneDrive / a file share) or a git
+repo everyone pulls — and have each person tell Claude the shared path. The loop
+then works across roles: an associate captures, a partner promotes, everyone
+recalls. Sync-conflict duplicates are just extra files (`review` resolves them
+like any duplicate), and `verified_by` is a name, not a login — agree on full
+names so promotions mean something. See
+[plugin/README.md](plugin/README.md#sharing-across-the-firm) for details.
 
 ## Configuration
 
@@ -174,6 +199,14 @@ No API key, ever — Claude does all the structuring.
 - **Human-in-the-loop by design.** Captured units are `status: draft` and are not
   authoritative until a person promotes them. `owner` / `verified_by` are
   free-text — they record who vouched, they don't authenticate.
+- **Ethical walls are advisory.** The `confidentiality` field (`walled` /
+  `client`) controls how *Claude* treats a unit — it is not access control, and
+  anyone who can open the folder can read the file. A real screen must be
+  enforced where files are enforced: a separate folder or share with its own
+  permissions.
+- **Retired, not deleted.** Promoted knowledge is never destroyed — retiring a
+  unit moves it to `archive/` with `status: retired`, preserving the record of
+  what the procedure used to be. Only unpromoted drafts can be deleted.
 - **Document ingest** reads the text layer only. Scanned-image PDFs yield no text;
   OCR is a future add.
 

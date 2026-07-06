@@ -128,17 +128,26 @@ workflow artifact from knowledge that already exists and has been vouched for.
    `~/Documents/firm-knowledge/skills/<slug>/SKILL.md`). Then read
    `<knowledge folder>/skills/.scaffold-manifest.json` (create `{ "skills": [] }`
    if absent) and upsert an entry — `{ slug, path, source_id, verified_on,
-   scaffolded_on }` — keyed by `slug`, so `--check` can find it later. Show the
+   scaffolded_on, installed_at? }` — keyed by `slug`, so `--check` can find it
+   later. Show the
    user the generated content and the path. Don't overwrite an existing generated
    skill without asking.
-6. **Tell them how to install it.** The generated skill is a normal Claude skill;
-   to make it invokable it must live in a skills directory Claude loads:
-   - **Any surface:** copy/symlink the `<slug>/` folder into `~/.claude/skills/`.
+6. **Offer to install it.** The generated skill is a normal Claude skill; to be
+   invokable it must live in a skills directory Claude loads. Offer to do the
+   default install now: copy the `<slug>/` folder to `~/.claude/skills/<slug>/`
+   (personal skills — loaded by Cowork, Desktop, and the CLI alike). Confirm the
+   destination first — especially for a `walled` / `client` unit, where the user
+   must confirm the location is private (see Guardrails) — and don't overwrite an
+   existing `~/.claude/skills/<slug>/` you didn't generate. If they'd rather
+   distribute it another way, the alternatives:
    - **CLI plugin users:** drop it into a plugin's `skills/` directory.
    - **Cowork / Desktop:** include it in the plugin folder uploaded via the plugin
      manager.
    After installing, restart the surface (or `/reload-plugins` in the CLI). Then it
-   triggers on its description or `/<slug>`.
+   triggers on its description or `/<slug>`. If you installed a copy, record the
+   installed path too in the manifest entry (`installed_at`), so a `--check`
+   regeneration can refresh the installed copy, not just the one in the knowledge
+   folder.
 
 ## Checking for drift (`--check`)
 
@@ -154,15 +163,23 @@ When the user asks whether their scaffolded skills are current (or invokes
    - **Match** → up to date; no action.
    - **Advanced** → the unit was re-promoted since scaffolding; the skill is
      **stale**.
-   - **Unit missing / now a draft** → flag it: the source was rejected or pulled,
+   - **Unit retired** (now in `archive/`, `status: retired`) → the firm no longer
+     stands behind this procedure, so the deployed skill has lost its backing.
+     Say so, name the `retired_on` date, and — if the archived unit has a
+     `superseded_by` — offer to scaffold the replacement unit instead. Recommend
+     removing the old skill; don't delete anything yourself.
+   - **Unit missing / now a draft** → flag it: the source was pulled or demoted,
      so the deployed skill no longer has authoritative backing. Recommend the user
      remove or re-scaffold it; don't delete anything yourself.
 3. **Report drift plainly** — list stale skills with old vs current `verified_on`,
    most-changed first.
 4. **Regenerate on the user's say-so.** For each stale skill they approve, re-run
    the Generate workflow above against the current unit (overwriting that skill's
-   file and updating its manifest `verified_on`). Confirm before overwriting; honor
-   the same confidentiality and open-question checks as a fresh scaffold.
+   file and updating its manifest `verified_on`). If the manifest entry has an
+   `installed_at` path, refresh that installed copy too — a regenerated snapshot
+   that never reaches the installed skill is still stale where it counts. Confirm
+   before overwriting; honor the same confidentiality and open-question checks as
+   a fresh scaffold.
 
 ## Guardrails
 

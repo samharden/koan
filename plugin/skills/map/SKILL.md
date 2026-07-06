@@ -60,7 +60,10 @@ it — they share the same data-gathering.
      (drives node color). Set `status` from scope (`inbox` → `draft`).
    - **Gap nodes:** for a procedure that units reference but that isn't captured,
      add a node with `"type": "gap"` (no status needed). Only add a gap when
-     something in the corpus actually points to it — don't invent topics.
+     something in the corpus actually points to it — don't invent topics. Also
+     add a gap node per unanswered entry in `gaps.md` (the recall-miss log) if
+     it exists — those are questions people actually asked; they're the
+     strongest gaps on the map.
    - **Edges — infer relationships from content, not guesses:**
      - `related` — one unit references another's procedure, hands off to it, or
        they share authorities/triggers and clearly connect.

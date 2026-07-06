@@ -36,7 +36,10 @@ Do **not** use this for a single procedure (`recall`), for writing one down
    `inbox/*.md` (drafts) in the knowledge folder (default
    `~/Documents/firm-knowledge/`). Note the split between promoted and draft up
    front. The folder of a file tells you its status: `units/` = active, `inbox/` =
-   draft.
+   draft. Also `Read` two root files if present: `gaps.md` (recall misses — the
+   demand side of the audit) and `INDEX.md` (compare it against the folders; if
+   it's missing entries or lists things that don't exist, flag the drift and
+   point at `/koan:review`, which rebuilds it).
 2. **Read enough to judge connections, not just titles.** `Read` the units that
    matter for the analysis — at minimum the promoted ones, plus any drafts the user
    wants included. Titles alone hide the disconnects; you need the `trigger`,
@@ -47,15 +50,20 @@ Do **not** use this for a single procedure (`recall`), for writing one down
    - **Gaps** — procedures that are referenced but not captured (a unit's steps
      point to "our intake process" that doesn't exist as its own unit), obvious
      neighbors of existing units that are missing, or whole practice areas with
-     no coverage.
+     no coverage. Weigh `gaps.md` heavily here: those are questions people
+     *actually asked* and didn't get answered — demand-side evidence beats
+     inference. If a logged gap has since been covered by a unit, note it as
+     resolved and recommend cleaning the line up.
    - **Overlaps / duplicates** — two units describing the same procedure, or
      heavily overlapping scope that should be merged or disambiguated.
    - **Contradictions** — units that give conflicting steps, triggers, or
      authorities for the same situation. These are the highest-value findings.
    - **Disconnects** — units that *should* cross-reference each other but don't,
      or hand-offs where one procedure's output never connects to the next.
-   - **Staleness / unfinished work** — unresolved `open_questions`, drafts that
-     have sat unpromoted, or authorities that look outdated.
+   - **Staleness / unfinished work** — promoted units past their `review_by`
+     date (overdue for re-review — point these at `/koan:review`), unresolved
+     `open_questions`, drafts that have sat unpromoted, or authorities that look
+     outdated.
    - **Confidentiality mismatches** — a `walled` or `client` unit referenced by an
      `internal` one, or similar procedures classified inconsistently.
 4. **Report a prioritized landscape.** Lead with a one-line health read (how many

@@ -20,8 +20,10 @@ Search the firm's files first, then answer.
 Plain markdown files on the user's machine, by default in
 `~/Documents/firm-knowledge/`: `units/` holds **promoted** (authoritative) units,
 `inbox/` holds **drafts** (not yet authoritative), `docs/` holds ingested document
-text. If the user keeps their knowledge elsewhere, use that path. If the folder
-doesn't exist yet, nothing has been captured — treat it as an empty store.
+text, `archive/` holds **retired** units (no longer firm procedure), and
+`INDEX.md` at the root is a one-line-per-item table of contents. If the user
+keeps their knowledge elsewhere, use that path. If the folder doesn't exist yet,
+nothing has been captured — treat it as an empty store.
 
 ## When to use
 
@@ -37,16 +39,25 @@ clearly not about an internal procedure.
 
 ## Workflow
 
-1. **Search the files before answering.** Search the knowledge folder for the
-   user's question. Start in `units/` (promoted, authoritative), then `inbox/`
-   (drafts) if needed:
-   - `Glob` `units/*.md` and `inbox/*.md` to see what exists (filenames carry the
-     topic, e.g. `conflict-waivers-for-laterals.md`).
-   - `Grep` across those folders for the key terms from the question — and for
-     synonyms, since there's no fuzzy matching (e.g. for "lateral hire conflicts"
-     also try "conflict", "waiver", "lateral", "screen"). Search titles and body.
+1. **Search the files before answering.** Start with the index, fall back to
+   the folders:
+   - `Read` `INDEX.md` first — one read tells you every unit's title, practice
+     areas, and trigger hook, which usually identifies the right unit(s)
+     immediately. Prefer **Promoted** entries; note **Drafts** separately.
+   - If the index is missing, or nothing in it matches, search directly:
+     `Glob` `units/*.md` and `inbox/*.md` (filenames carry the topic), and
+     `Grep` those folders for the key terms — and synonyms, since there's no
+     fuzzy matching (e.g. for "lateral hire conflicts" also try "conflict",
+     "waiver", "lateral", "screen"). If the folders hold things the index
+     doesn't (or vice versa), mention the drift so the user can rebuild the
+     index in `/koan:review`.
    - There's no semantic ranking here, so cast a slightly wide net, then judge
      relevance yourself by reading.
+   - If units and drafts miss, also `Grep` `docs/*.md` — ingested documents
+     aren't firm-vouched procedure, but they can still hold the answer. Attribute
+     a doc-sourced answer to the document (its `title` / `source`) and say it
+     hasn't been captured as a unit; offer `/koan:capture` or `/koan:ingest` to
+     extract it properly.
 2. **Read the best hits.** `Read` the most relevant file(s) in full to get the
    whole procedure (Trigger / Steps / Exceptions / Authorities), not just a grep
    line.
@@ -59,13 +70,23 @@ clearly not about an internal procedure.
      as settled firm policy.
    - If a unit's `confidentiality` is `walled` or `client`, treat it as tied to a
      specific matter / ethical screen — flag that rather than reusing it freely.
-5. **Handle a miss honestly.** If nothing in the folder is relevant (or the folder
-   is empty / missing), tell the user the firm hasn't captured this yet. Do **not**
-   silently fall back to generic advice dressed up as firm policy. Offer to capture
-   it now via `/capture` so the next person gets an answer.
+5. **Handle a miss honestly — and log it.** If nothing in the folder is relevant
+   (or the folder is empty / missing), tell the user the firm hasn't captured
+   this yet. Do **not** silently fall back to generic advice dressed up as firm
+   policy. Then:
+   - **Log the miss** to `gaps.md` in the knowledge folder (create it if
+     absent), appending one line:
+     `- <YYYY-MM-DD> — asked: "<the question, paraphrased>" — no matching unit`.
+     Mention you've logged it — the gap list is demand-side evidence of what the
+     firm should capture next (`landscape` reads it).
+   - Offer to capture it now via `/capture` so the next person gets an answer.
 
 ## Guardrails
 
 - Never invent firm procedure. If the store doesn't have it, say so.
 - Keep general knowledge clearly separated from captured firm knowledge — if you
   supplement a captured answer with general context, label which is which.
+- **Never answer from `archive/` as current procedure.** Retired units are the
+  historical record — cite one only when the user explicitly asks how the firm
+  *used to* do something (or why it changed), and label it retired, with its
+  `retired_on` date and `superseded_by` unit if present.

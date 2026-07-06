@@ -1,8 +1,8 @@
 {
   "name": "koan",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "Institutional knowledge capture & memory for law firms — a Claude MCP server + plugin over one local-first store.",
+  "description": "Institutional knowledge capture & memory for law firms — a skills-only Claude plugin over plain local markdown, with an optional MCP server for semantic search.",
   "license": "MIT",
   "workspaces": [
     "packages/*",
@@ -12,10 +12,12 @@
     "build:core": "npm run build -w @koan/core",
     "build:mcp": "npm run build -w @koan/mcp",
     "build": "npm run build:core && npm run build:mcp",
-    "test": "npm run build:core && node --test \"packages/core/test/*.test.mjs\"",
+    "check": "node scripts/check-plugin.mjs",
+    "test": "npm run check && npm run build:core && node --test \"packages/core/test/*.test.mjs\"",
     "mcp": "node apps/mcp/dist/index.js",
     "setup": "npm run build && node scripts/setup-plugin.mjs",
     "pack:mcpb": "node scripts/pack-mcpb.mjs",
+    "pack:plugin": "npm run check && rm -f koan-plugin.zip && cd plugin && zip -r -X ../koan-plugin.zip . -x '*.DS_Store'",
     "install-skills": "node scripts/install-skills.mjs",
     "uninstall-skills": "node scripts/install-skills.mjs --uninstall"
   }
