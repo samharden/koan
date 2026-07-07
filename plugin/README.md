@@ -7,9 +7,26 @@ your computer.
 
 ## Install
 
-In **Cowork / Claude Desktop**, upload this `plugin/` folder via the in-app plugin
-manager, then restart the app. That's it — the eight skills below are ready to
-use. (Claude Code CLI: `claude plugin marketplace add /ABSOLUTE/PATH/TO/koan` then
+In **Cowork / Claude Desktop**, upload a `.zip` of this plugin via the in-app
+plugin manager, then restart the app. That's it — the eight skills below are ready
+to use.
+
+Build the zip so the manifest (`.claude-plugin/plugin.json`) lands at the **root**
+of the archive — zip the *contents* of this folder, not the folder itself:
+
+```bash
+# from the repo root
+npm run pack:plugin            # → koan-plugin.zip (recommended)
+
+# or by hand
+cd plugin && zip -r ../koan-plugin.zip . -x '*.DS_Store'
+```
+
+Don't use Finder's right-click **Compress** — it nests everything under `plugin/`
+and the plugin manager won't find the manifest. See the main
+[README](../README.md#build-the-install-zip) for how to verify the structure.
+
+(Claude Code CLI: `claude plugin marketplace add /ABSOLUTE/PATH/TO/koan` then
 `claude plugin install koan@koan-local`, and `/reload-plugins`.)
 
 Nothing else to configure — no connector, no `npm install`, no build step.

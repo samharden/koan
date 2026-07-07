@@ -79,15 +79,49 @@ Confidentiality is a first-class field (`internal | walled | client`); flag
 
 ### Install the plugin (Cowork — recommended)
 
-In **Cowork / Claude Desktop**, upload the **`plugin/`** folder via the in-app
-plugin manager, then restart the app. Done — no Node, no terminal, no build, no
-config files, no connector. The eight skills are ready, and your first capture
-creates the knowledge folder at `~/Documents/firm-knowledge/`.
+In **Cowork / Claude Desktop**, upload the plugin via the in-app plugin manager,
+then restart the app. Done — no Node, no terminal, no build, no config files, no
+connector. The eight skills are ready, and your first capture creates the
+knowledge folder at `~/Documents/firm-knowledge/`.
 
 > Why this is all you need: in Cowork, Claude has file tools, so the skills read
 > and write your knowledge as plain markdown directly. There's nothing to run in
 > the background and nothing that reaches the network — which also means **no
 > "this extension can access your computer" install warning** to worry your users.
+
+#### Build the install `.zip`
+
+The plugin manager takes a single `.zip`. The one rule that matters: the plugin
+manifest (`.claude-plugin/plugin.json`) must sit at the **root of the zip** — not
+nested inside a `plugin/` folder. Zipping the *contents* of `plugin/` (not the
+folder itself) is what gets that right.
+
+**Easiest — one command** (from the repo root):
+
+```bash
+npm run pack:plugin      # writes koan-plugin.zip with the correct structure
+```
+
+**By hand — macOS / Linux terminal:**
+
+```bash
+cd plugin
+zip -r ../koan-plugin.zip . -x '*.DS_Store'   # zip the contents, not the folder
+```
+
+> ⚠️ Don't right-click the `plugin` folder in Finder → **Compress**. That nests
+> everything under `plugin/` in the archive, so the manifest ends up at
+> `plugin/.claude-plugin/plugin.json` and the plugin manager won't find it.
+
+**Verify** the structure before uploading — the manifest should be at the top:
+
+```bash
+unzip -l koan-plugin.zip | grep plugin.json
+#   307  ...  .claude-plugin/plugin.json      ✅ at the root
+#   307  ...  plugin/.claude-plugin/plugin.json   ❌ nested — re-zip the contents
+```
+
+Then upload `koan-plugin.zip` in the plugin manager and restart the app.
 
 The skills (`plugin/skills/<name>/SKILL.md`) trigger on natural phrasing or
 explicitly as `/koan:intro`, `…:capture`, `…:ingest`, `…:recall`, `…:review`,
