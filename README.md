@@ -7,7 +7,7 @@ knowledge lives in plain markdown files on your own machine.
 Built for law firms (confidentiality and ethical-wall aware), but the core is
 domain-agnostic.
 
-> **Koan ships as a skills-only Claude plugin** (built for **Cowork**). The eight
+> **Koan ships as a skills-only Claude plugin** (built for **Cowork**). The nine
 > skills read and write your knowledge as plain markdown files using Claude's own
 > file tools — **no server, no database, no API key, nothing to build.** Install
 > the `plugin/` folder and you're done. An optional local MCP server (in this
@@ -31,7 +31,7 @@ model is called beyond the Claude you're already talking to.
 ## Repo layout
 
 ```
-plugin/          the product — Claude skills-only plugin (intro · capture · ingest · recall · review · landscape · map · scaffold)
+plugin/          the product — Claude skills-only plugin (intro · capture · ingest · recall · review · landscape · map · improve · scaffold)
 packages/core/   @koan/core — store, local embeddings, retrieval (powers the OPTIONAL MCP server)
 apps/mcp/        OPTIONAL local stdio MCP server (the connector) + the draft-review card
 scripts/         setup-plugin (register the connector) · pack-mcpb (.mcpb bundle) · install-skills
@@ -49,9 +49,10 @@ reference-architecture.md   the design this implements
 2. **Structure** — Claude writes the unit as a **draft** markdown file to
    `~/Documents/firm-knowledge/inbox/`.
 3. **Serve** — the `recall` skill searches your files (titles + content) and
-   answers from the firm's own units, attributed to the source. When it can't
-   answer, it logs the question to `gaps.md` — demand-side evidence of what the
-   firm should capture next, which `landscape` and `map` surface.
+   answers from the firm's own units, attributed to the source. Every hit is
+   logged to `usage.md` (which knowledge actually earns its keep); when it
+   can't answer, it logs the question to `gaps.md` — demand-side evidence of
+   what the firm should capture next, which `landscape` and `map` surface.
 4. **Maintain** — every unit is written `status: draft` and is never treated as
    authoritative until a human reviews it and **promotes** it (via the `review`
    skill) to `units/`, stamping `verified_by`, `verified_on`, and a `review_by`
@@ -62,26 +63,63 @@ reference-architecture.md   the design this implements
    move to `archive/` (`status: retired`), never the trash: the record of what
    the procedure *used to be* stays available; only unpromoted drafts are ever
    deleted.
-5. **Deploy** — a promoted unit can be turned into a *runnable* workflow, not just
+5. **Improve** — the `improve` skill asks the question `capture` deliberately
+   doesn't: *is this a good process?* It critiques a promoted unit — grounded
+   in the logged friction, gaps, and usage before general opinion — and, on
+   your say-so, writes the proposed revision as a new draft that `supersedes`
+   the original. The proposal goes through the same review gate as everything
+   else; when a human promotes it, the original is retired to `archive/` with
+   the supersession trail intact. The faithful record and the better process
+   both survive.
+6. **Deploy** — a promoted unit can be turned into a *runnable* workflow, not just
    a retrievable one: the `scaffold` skill maps a unit's steps, exceptions, and
-   authorities into a generated `SKILL.md` you install and invoke in Cowork /
-   Desktop / the CLI. Capture knowledge, then deploy the parts worth running. Each
-   generated skill is a snapshot stamped with a `koan_source` fingerprint (the
-   unit's `verified_on`) and tracked in
+   authorities into a generated `SKILL.md`, installed for one user or into the
+   shared **firm plugin** (`firm-knowledge/firm-plugin/` — one artifact the
+   whole team installs). Capture knowledge, then deploy the parts worth running.
+   Each generated skill is a snapshot stamped with a `koan_source` fingerprint
+   (the unit's `verified_on`) and tracked in
    `~/Documents/firm-knowledge/skills/.scaffold-manifest.json`; `scaffold --check`
    detects skills whose source unit was re-promoted and regenerates them, so
-   deployed workflows track *vouched* changes.
+   deployed workflows track *vouched* changes. And deployed skills report back:
+   when a run hits a situation the steps didn't cover, it's logged to
+   `friction.md` — field evidence `improve` and `landscape` feed on, closing
+   the loop.
 
 Confidentiality is a first-class field (`internal | walled | client`); flag
 `walled` when a capture references a specific client matter.
 
 ## Installation
 
-### Install the plugin (Cowork — recommended)
+### Add from GitHub (Claude app — recommended)
+
+Koan ships a plugin marketplace at the root of this repo, so you can install it
+straight from GitHub — no download, no zip, no build.
+
+1. In the **Claude app**, open the plugin / marketplace manager and choose **Add
+   marketplace**.
+2. Paste the repo:
+
+   ```
+   samharden/koan
+   ```
+
+   (or the full URL `https://github.com/samharden/koan`)
+3. Claude reads the marketplace, lists the **koan** plugin — click **Install**,
+   then restart the app if prompted.
+
+That's it: the nine skills are ready, and your first capture creates the
+knowledge folder at `~/Documents/firm-knowledge/`. To update later, re-open the
+marketplace entry and pull the latest version.
+
+> The marketplace manifest lives at [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)
+> and points at the [`plugin/`](plugin/) folder, so "Add marketplace →
+> `samharden/koan`" always installs the current plugin from `main`.
+
+### Install the plugin from a `.zip` (Cowork)
 
 In **Cowork / Claude Desktop**, upload the plugin via the in-app plugin manager,
 then restart the app. Done — no Node, no terminal, no build, no config files, no
-connector. The eight skills are ready, and your first capture creates the
+connector. The nine skills are ready, and your first capture creates the
 knowledge folder at `~/Documents/firm-knowledge/`.
 
 > Why this is all you need: in Cowork, Claude has file tools, so the skills read
@@ -125,12 +163,12 @@ Then upload `koan-plugin.zip` in the plugin manager and restart the app.
 
 The skills (`plugin/skills/<name>/SKILL.md`) trigger on natural phrasing or
 explicitly as `/koan:intro`, `…:capture`, `…:ingest`, `…:recall`, `…:review`,
-`…:landscape`, `…:map`, `…:scaffold`. See [plugin/README.md](plugin/README.md)
+`…:landscape`, `…:map`, `…:improve`, `…:scaffold`. See [plugin/README.md](plugin/README.md)
 for the per-skill table and the on-disk layout.
 
-**Claude Code CLI** (optional): `claude plugin marketplace add
-/ABSOLUTE/PATH/TO/koan` then `claude plugin install koan@koan-local`, and
-`/reload-plugins`. Or `npm run install-skills` to symlink the skills into
+**Claude Code CLI** (optional): `claude plugin marketplace add samharden/koan`
+(or a local `/ABSOLUTE/PATH/TO/koan`) then `claude plugin install koan@koan-local`,
+and `/reload-plugins`. Or `npm run install-skills` to symlink the skills into
 `~/.claude/skills` directly.
 
 ---
@@ -159,7 +197,28 @@ retrieval.
 
 ## Try it
 
-A full loop — capture something, review it, recall it — in three chats:
+**Day one — start with what you already have.** The fastest way to a useful
+knowledge base isn't an interview; it's the documents the firm already wrote:
+
+> **You:** Here's our intake checklist and the memo on conflict screening — pull
+> the procedures into the knowledge base.
+
+The `ingest` skill stores each document's text and extracts the procedures it
+describes as drafts — one afternoon of ingesting can seed a review queue that
+would take months of interviews. Then run `/koan:landscape`: even over a handful
+of units it diffs your coverage against practice-area baselines and hands back a
+capture roadmap, so you know what to capture next instead of guessing.
+
+**Day to day — capture is a byproduct of work.** Right after Claude helps you
+through a real task, say:
+
+> **You:** Capture what we just did so the next person doesn't start from scratch.
+
+The `capture` skill distills the draft from the conversation itself — the steps
+actually taken, the traps actually hit — and asks only the two or three
+questions the transcript can't answer. No interview.
+
+**The full loop** — capture something, review it, recall it — in three chats:
 
 **1. Capture.** Tell Claude you want to write something down:
 

@@ -63,7 +63,9 @@ it — they share the same data-gathering.
      something in the corpus actually points to it — don't invent topics. Also
      add a gap node per unanswered entry in `gaps.md` (the recall-miss log) if
      it exists — those are questions people actually asked; they're the
-     strongest gaps on the map.
+     strongest gaps on the map. Treat unresolved `friction.md` entries (holes
+     deployed workflows actually hit) the same way, as gap nodes linked by a
+     `related` edge to their source unit.
    - **Edges — infer relationships from content, not guesses:**
      - `related` — one unit references another's procedure, hands off to it, or
        they share authorities/triggers and clearly connect.

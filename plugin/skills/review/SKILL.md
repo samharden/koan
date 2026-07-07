@@ -68,12 +68,22 @@ their knowledge elsewhere, use that path.
         `inbox/<draft>.md` (it has moved, not been copied).
      4. Move the unit's line in `INDEX.md` from **Drafts** to **Promoted** (with
         the new id).
+     5. Tidy the signal files (formats in `../_shared/unit-format.md`): re-key
+        any `usage.md` line for the draft id to the new id, and if the promoted
+        content resolves a logged `friction.md` line, remove it and say which.
+     6. **If the draft's `supersedes` names a promoted unit** (an `improve`
+        proposal), finish the hand-off: with the user's confirmation, retire
+        that unit — the same retire flow as in re-review below (move to
+        `archive/`, `status: retired`, `retired_on` / `retired_by`), setting
+        its `superseded_by` to the newly promoted id. If the user declines,
+        warn that two active units now cover the same procedure and link them
+        via `related` instead.
    - **Edit first** → edit the draft file in `inbox/`, show the result, then promote
      once they approve.
    - **Discard** → **delete** the `inbox/<draft>.md` file for drafts that should not
-     become firm knowledge, and remove its `INDEX.md` line. (Discarding an
-     unpromoted draft is the only deletion in the system — promoted knowledge is
-     retired to `archive/`, never deleted.)
+     become firm knowledge, and remove its `INDEX.md` line (and `usage.md` line,
+     if any). (Discarding an unpromoted draft is the only deletion in the
+     system — promoted knowledge is retired to `archive/`, never deleted.)
 4. **Move to the next draft** until the queue is clear or the user stops.
 5. **Re-review overdue units.** For each promoted unit past its `review_by`,
    `Read` it and present it (the same card works — its `status` is `active`), then
@@ -87,7 +97,7 @@ their knowledge elsewhere, use that path.
    - **No longer how the firm does it** → **retire, don't delete.** With the
      user's confirmation, move the file to `archive/<id>.md`, set
      `status: retired`, add `retired_on: <today>` and `retired_by: <name>`, and
-     remove its `INDEX.md` line. If a replacement exists (or you capture one
+     remove its `INDEX.md` line (and `usage.md` line, if any). If a replacement exists (or you capture one
      first via `/koan:capture`), point the old unit at it with
      `superseded_by: <id>`. The archive is the firm's record of what the
      procedure used to be — "why did we do it that way in 2024" is a question

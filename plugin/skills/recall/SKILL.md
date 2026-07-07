@@ -64,6 +64,13 @@ clearly not about an internal procedure.
 3. **Answer from what you found, and attribute it.** Ground the response in the
    captured unit(s). Name the unit (its title / filename) you're drawing from so
    the user can trust it.
+   - **Log the hit.** For each unit the answer actually drew from, update its
+     line in `usage.md` at the knowledge-folder root — bump the count and set
+     the date (format in `../_shared/unit-format.md`; create the file or line
+     if absent, update in place, never append a duplicate). This is one quiet
+     write — don't narrate it beyond a passing mention. The usage record is
+     how `landscape` knows which knowledge earns its keep and which units are
+     the best candidates to scaffold or improve.
 4. **Respect status and confidentiality.**
    - A file in `inbox/` (or `status: draft`) is a **draft** — not authoritative.
      Say so, and offer to open it for review (`/review`) rather than presenting it

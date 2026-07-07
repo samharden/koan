@@ -36,8 +36,10 @@ Do **not** use this for a single procedure (`recall`), for writing one down
    `inbox/*.md` (drafts) in the knowledge folder (default
    `~/Documents/firm-knowledge/`). Note the split between promoted and draft up
    front. The folder of a file tells you its status: `units/` = active, `inbox/` =
-   draft. Also `Read` two root files if present: `gaps.md` (recall misses — the
-   demand side of the audit) and `INDEX.md` (compare it against the folders; if
+   draft. Also `Read` four root files if present: `gaps.md` (recall misses — the
+   demand side of the audit), `usage.md` (recall hits — which units actually get
+   used), `friction.md` (situations deployed workflow skills hit that their
+   source unit didn't cover), and `INDEX.md` (compare it against the folders; if
    it's missing entries or lists things that don't exist, flag the drift and
    point at `/koan:review`, which rebuilds it).
 2. **Read enough to judge connections, not just titles.** `Read` the units that
@@ -54,6 +56,15 @@ Do **not** use this for a single procedure (`recall`), for writing one down
      *actually asked* and didn't get answered — demand-side evidence beats
      inference. If a logged gap has since been covered by a unit, note it as
      resolved and recommend cleaning the line up.
+   - **Baseline coverage** — `Read` `baselines.md` (in this skill's folder) and
+     diff the corpus against the checklists that apply to this firm (Firm
+     operations always; a practice-area baseline only if the firm works in that
+     area — infer from the units' `practice_area`, or ask). Follow that file's
+     "How landscape uses this file" rules: attribute every finding to the named
+     baseline, rank baseline misses below evidence-backed gaps, and report
+     partial coverage as partial. This is what makes a young store's landscape
+     useful — a firm with six units gets a capture roadmap, not "coverage looks
+     coherent".
    - **Overlaps / duplicates** — two units describing the same procedure, or
      heavily overlapping scope that should be merged or disambiguated.
    - **Contradictions** — units that give conflicting steps, triggers, or
@@ -64,6 +75,13 @@ Do **not** use this for a single procedure (`recall`), for writing one down
      date (overdue for re-review — point these at `/koan:review`), unresolved
      `open_questions`, drafts that have sat unpromoted, or authorities that look
      outdated.
+   - **Usage signals** — read `usage.md` and `friction.md` against the corpus:
+     units with friction entries have field-tested holes (the strongest
+     improvement candidates — point them at `/koan:improve`); heavily-recalled
+     units are the best candidates to operationalize (`/koan:scaffold`) and the
+     most costly to leave stale; promoted units never recalled may be
+     mis-titled, redundant, or answering a question nobody asks — worth a look
+     at re-review time rather than an automatic problem.
    - **Confidentiality mismatches** — a `walled` or `client` unit referenced by an
      `internal` one, or similar procedures classified inconsistently.
 4. **Report a prioritized landscape.** Lead with a one-line health read (how many
@@ -88,10 +106,12 @@ Do **not** use this for a single procedure (`recall`), for writing one down
 - **Distinguish status in findings.** A contradiction between two promoted units is
   a real problem; a draft conflicting with a promoted unit is expected churn — say
   which is which so the user knows the severity.
-- **Don't manufacture gaps.** Flag a missing procedure only when something in the
-  corpus actually points to it or it's an obvious neighbor — not every conceivable
-  topic a firm could document. An honest "coverage looks coherent here" beats a
-  padded list.
+- **Don't manufacture gaps.** Flag a missing procedure only when something in
+  the corpus points to it, it's an obvious neighbor, or a named item in an
+  applicable baseline isn't covered — never from free-floating speculation. A
+  baseline miss is always attributed to its baseline so the user can judge the
+  yardstick, and an honest "coverage looks coherent here" still beats a padded
+  list.
 - **Respect confidentiality.** Surface a `walled` / `client` unit's *existence and
   relationships* for the audit, but don't reproduce its protected contents when
   flagging it.

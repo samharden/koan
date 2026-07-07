@@ -42,12 +42,22 @@ not a wall of text.
   own machine (by default `~/Documents/firm-knowledge/`). No server, no database —
   nothing leaves their computer.
 - **The loop — capture → review → recall:**
-  1. **Capture** (`/koan:capture`) — a short debrief turns one "how we do X"
-     into a **draft** unit in the review queue.
+  1. **Capture** — one "how we do X" becomes a **draft** unit in the review
+     queue. Three doors in, cheapest first: **ingest** (`/koan:ingest`) pulls
+     drafts out of documents the firm already has — memos, checklists, old
+     wiki pages; **session capture** ("capture what we just did") distills a
+     draft from work just done with Claude, no interview; and the **debrief**
+     (`/koan:capture`) interviews the knowledge out of someone's head.
   2. **Review** (`/koan:review`) — a human reads each draft and **promotes**,
      edits, or discards it. Drafts are *not* authoritative until promoted.
   3. **Recall** (`/koan:recall`) — later, "how do we …" questions are answered
      from promoted units, attributed to the source, never invented.
+- **Beyond the loop** (mention, don't demo): `/koan:landscape` audits coverage
+  and gaps — worth running even on day one, since it compares the store
+  against practice-area baselines and returns a capture roadmap;
+  `/koan:improve` critiques a promoted process and proposes a better version;
+  `/koan:scaffold` turns a promoted unit into a runnable workflow skill the
+  whole firm can install.
 
 ## Guided demo
 
@@ -57,9 +67,14 @@ the whole tour if they only want one piece.
 1. **Check the lay of the land.** `Glob` `units/*.md` and `inbox/*.md` in the
    knowledge folder (default `~/Documents/firm-knowledge/`) to see whether anything
    has been captured yet. Tailor the demo to what you find:
-   - **Empty store** → start at capture: "Let's write down one thing your firm
-     does. Pick something small — how you open a new matter, say." Then hand off
-     to `/koan:capture`.
+   - **Empty store** → start where the knowledge already is, not with an
+     interview. Ask first: "Do you have anything written down already — a
+     checklist, a policy memo, an old wiki page?" If yes, hand off to
+     `/koan:ingest`: one document can seed several drafts in a few minutes.
+     If not, offer the debrief on something small ("how you open a new
+     matter, say") via `/koan:capture` — and mention that after any real
+     piece of work with Claude, "capture what we just did" saves the process
+     as a byproduct, no interview needed.
    - **Drafts pending** → start at review: show what's waiting and hand off to
      `/koan:review`.
    - **Promoted units exist** → start at recall: ask a "how do we …" question
@@ -67,9 +82,11 @@ the whole tour if they only want one piece.
      attributed answer.
 2. **Narrate the handoff.** Before invoking another skill, say which step of the
    loop it is and what they'll see, so the mental model sticks.
-3. **Close the loop.** After the demo, point out the other two skills and how to
-   trigger them — by natural phrasing or `/koan:capture`, `/koan:review`,
-   `/koan:recall`.
+3. **Close the loop.** After the demo, point out the rest of the loop and how
+   to trigger each skill — by natural phrasing or `/koan:capture`,
+   `/koan:review`, `/koan:recall` — and suggest `/koan:landscape` as the
+   natural next step: even a near-empty store gets a baseline-driven capture
+   roadmap out of it.
 
 ## Guardrails
 

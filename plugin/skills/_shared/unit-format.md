@@ -38,6 +38,7 @@ verified_on: ""                 # set at promotion / re-vouch (YYYY-MM-DD)
 review_by: ""                   # set at promotion — default +180 days
 confidentiality: internal       # internal | walled | client
 related: []                     # ids of related units
+supersedes: ""                  # optional — id of the promoted unit this draft proposes to replace
 templates: [<template>, …]      # [] if none
 ---
 ```
@@ -86,7 +87,16 @@ templates: [<template>, …]      # [] if none
   All other fields are preserved as the historical record.
 - **`source`** records provenance: `debrief` for a captured interview,
   `session` for a unit distilled from work done in the current conversation,
-  `document: <doc-id>` for a unit extracted by `ingest`.
+  `document: <doc-id>` for a unit extracted by `ingest`, `improvement` for a
+  revision proposed by `improve` (its `supersedes` field names the promoted
+  unit it would replace).
+- **Supersession**: when `review` promotes a draft whose `supersedes` names a
+  promoted unit, it then (with the user's confirmation) retires that unit —
+  moving it to `archive/` with `superseded_by: <the new unit's id>` — so the
+  proposal and the retirement happen as one reviewed hand-off. The `supersedes`
+  field stays on the new unit as provenance. Promoting the proposal without
+  retiring the original leaves two active units for the same procedure; flag it
+  if the user chooses that.
 - **`confidentiality`**: `internal` (default) · `walled` (references a specific
   client matter behind an ethical screen) · `client` (client-owned material).
   A unit extracted from a document is at least as restricted as its source.
@@ -133,3 +143,37 @@ root, one line per miss, newest last:
 
 `capture` and `ingest` check it when saving and remove (or mark resolved) any
 line the new unit answers; `landscape` reads it as the demand-side gap list.
+
+## usage.md — recall hits
+
+The other half of the demand signal: when `recall` answers *from* a unit, it
+records the hit so the firm can see which knowledge actually gets used.
+`usage.md` at the knowledge-folder root, one line per unit, updated in place:
+
+```markdown
+- <unit-id> — recalled 3× — last 2026-07-07
+```
+
+- `recall` bumps the count and date on each hit (adding the line on a unit's
+  first hit; create the file if absent). Update the existing line — don't
+  append duplicates.
+- When `review` promotes a draft, its usage line (if any) is re-keyed to the
+  new promoted id; retirement or discard removes the line.
+- `landscape` reads it for prioritization: heavily-recalled units are the best
+  candidates for `scaffold` and `improve`; never-recalled units may be
+  mis-titled, redundant, or solving a problem nobody has.
+
+## friction.md — deployed-workflow misses
+
+When a **scaffolded skill** runs into a situation its baked-in steps don't
+cover, the generated skill logs the friction here — field evidence that the
+captured procedure has a hole. `friction.md` at the knowledge-folder root, one
+line per event, newest last:
+
+```markdown
+- <YYYY-MM-DD> — skill <slug> (unit <id>) — hit: "<the situation the steps didn't cover>"
+```
+
+`landscape` and `improve` read it as the supply-side improvement queue; when a
+re-promoted unit resolves a logged friction line, `review` removes (or marks
+resolved) that line, same as `capture` does for `gaps.md`.
