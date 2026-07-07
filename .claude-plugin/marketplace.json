@@ -1,6 +1,6 @@
 {
-  "name": "koan-local",
-  "description": "Local marketplace for the Koan plugin — capture, recall, and review firm know-how.",
+  "name": "koan",
+  "description": "Marketplace for the Koan plugin — capture, recall, review, and improve firm know-how.",
   "owner": {
     "name": "Sam Harden",
     "email": "noreply@koan.dev"

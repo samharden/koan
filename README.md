@@ -167,7 +167,7 @@ explicitly as `/koan:intro`, `…:capture`, `…:ingest`, `…:recall`, `…:rev
 for the per-skill table and the on-disk layout.
 
 **Claude Code CLI** (optional): `claude plugin marketplace add samharden/koan`
-(or a local `/ABSOLUTE/PATH/TO/koan`) then `claude plugin install koan@koan-local`,
+(or a local `/ABSOLUTE/PATH/TO/koan`) then `claude plugin install koan@koan`,
 and `/reload-plugins`. Or `npm run install-skills` to symlink the skills into
 `~/.claude/skills` directly.
 

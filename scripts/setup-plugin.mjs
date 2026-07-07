@@ -73,7 +73,7 @@ console.log(`  store (KOAN_HOME): ${koanHome}   [from ${source}]`);
 console.log(`  server:          ${serverPath}`);
 console.log(`\nNow install the skills plugin:`);
 console.log(`  CLI:    claude plugin marketplace add ${repoRoot}`);
-console.log(`          claude plugin install koan@koan-local`);
+console.log(`          claude plugin install koan@koan`);
 console.log(`  Cowork: upload the ${join(repoRoot, "plugin")} folder via the in-app plugin manager`);
 console.log(`          (its connector is already in claude_desktop_config.json — keep that one).`);
 console.log(`\nThen restart Cowork / Desktop, or /reload-plugins in the CLI.`);

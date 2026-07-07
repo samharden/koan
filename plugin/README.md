@@ -27,7 +27,7 @@ and the plugin manager won't find the manifest. See the main
 [README](../README.md#build-the-install-zip) for how to verify the structure.
 
 (Claude Code CLI: `claude plugin marketplace add /ABSOLUTE/PATH/TO/koan` then
-`claude plugin install koan@koan-local`, and `/reload-plugins`.)
+`claude plugin install koan@koan`, and `/reload-plugins`.)
 
 Nothing else to configure — no connector, no `npm install`, no build step.
 
